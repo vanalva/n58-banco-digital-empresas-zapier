@@ -62,12 +62,35 @@
     root.style.setProperty('--n58-zapier-fab-h', (h || 44) + 'px');
   }
 
-  function icon(markup) {
+  /* The project's own arrow, inlined. Geometry is copied verbatim from
+     assets/images/icons/up-arrow-green.svg — the solid notched chevron N58 uses
+     everywhere (it is also AlaN's eye in the FAB). Inlined rather than <img
+     src>, because build-web.js only scans src/js/ for JS-embedded asset paths
+     and never rewrites them, so a path in this string would 404 once pages
+     flatten to the web root.
+
+     Kept ON-AXIS, the way the icon is drawn and the way the carousel uses it —
+     the notched chevron is asymmetric and turns to mush when rotated off 90deg
+     steps. Two of them, the lower one mirrored by its <g>, separated by a gap a
+     little wider than the chevron itself: pointing apart = expand.
+
+     Each polygon gets its own <g> so the collapse state can flip the chevrons
+     INDIVIDUALLY (the [aria-pressed] rule in project.css). Flipping the whole
+     <svg> does nothing here: the pair is point-symmetric, so a mirror maps the
+     arrangement straight back onto itself. Flipping each chevron in place is
+     what actually turns "apart" into "together". The CSS transform would clobber
+     a transform attribute on the polygon itself, hence the wrapper. */
+  var CHEVRON = '5.614 0 2.549 0 0 4.253 2.145 4.253 3.591 1.84 4.571 1.84 ' +
+                '6.017 4.253 8.162 4.253 5.614 0';
+  function arrowPair() {
     var wrap = document.createElement('span');
     wrap.className = 'n58-zapier_ico';
     wrap.setAttribute('aria-hidden', 'true');
-    wrap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + markup + '</svg>';
+    wrap.innerHTML =
+      '<svg viewBox="0 0 8.162 13.006" fill="currentColor">' +
+        '<g><polygon points="' + CHEVRON + '"/></g>' +
+        '<g transform="translate(0 13.006) scale(1 -1)"><polygon points="' + CHEVRON + '"/></g>' +
+      '</svg>';
     return wrap;
   }
 
@@ -106,11 +129,11 @@
   function buildExpand() {
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'n58-modal-close n58-zapier_btn n58-zapier_expand';
-    btn.appendChild(icon(
-      '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
-      '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>'
-    ));
+    /* .n58-gallery-arrow is the site's arrow control (transparent tap target,
+       hover fade, press scale). Reused, not redefined — same as the Novedades
+       arrows do. */
+    btn.className = 'n58-gallery-arrow n58-zapier_btn n58-zapier_expand';
+    btn.appendChild(arrowPair());
     btn.addEventListener('click', toggleFull);
     return btn;
   }

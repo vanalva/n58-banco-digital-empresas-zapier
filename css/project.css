@@ -5937,8 +5937,8 @@ html.alan-stage-open body {
   text-transform: uppercase;
   pointer-events: none;
 }
-/* The controls reuse .n58-modal-close for hit area + the hover spin, but sit in
-   the header's flex row rather than pinning themselves to the panel corner. */
+/* The close control reuses .n58-modal-close for hit area + the hover spin, but
+   sits in the header's flex row rather than pinning itself to the panel corner. */
 [data-flwr] .n58-modal-close.n58-zapier_btn {
   position: static;
   top: auto;
@@ -5947,29 +5947,39 @@ html.alan-stage-open body {
   flex-shrink: 0;
   color: var(--_theme---text--main);
 }
+/* The arrow keeps the same box as the close X so the header row reads level
+   (.n58-gallery-arrow is 2.75rem for a thumb-sized tap target in a carousel;
+   here it sits in a 3.25rem header beside a 2.5rem control). */
+[data-flwr] .n58-gallery-arrow.n58-zapier_btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  /* Brand lime, the colour every other arrow on the site is drawn in —
+   core--500 is the exact #a0dd52 the icon files carry. */
+  color: var(--_palette---core--500);
+}
 [data-flwr] .n58-zapier_ico {
   display: block;
-  width: 1.125rem;
-  height: 1.125rem;
+  /* Sized up against the close X, which is drawn with the heavy notched menu
+     bar; the chevron is a lighter shape and needs the extra size to balance. */
+  height: 1.5rem;
 }
 [data-flwr] .n58-zapier_ico svg {
   display: block;
-  width: 100%;
+  width: auto;
   height: 100%;
 }
-[data-flwr] .n58-modal-close.n58-zapier_expand {
-  opacity: 0.75;
-  transition-property: opacity;
-  transition-duration: var(--_motion---duration-base);
+[data-flwr] .n58-zapier_ico polygon {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition-property: transform;
+  transition-duration: var(--_motion---duration-fast);
   transition-timing-function: var(--_motion---ease-standard);
 }
-[data-flwr] .n58-modal-close.n58-zapier_expand:hover,
-[data-flwr] .n58-modal-close.n58-zapier_expand:focus-visible {
-  opacity: 1;
-}
-/* Collapse icon: same button, arrows pointing in. */
-[data-flwr] .n58-zapier_expand[aria-pressed="true"] .n58-zapier_ico svg {
-  transform: rotate(180deg);
+/* Collapse: flip each chevron about its OWN centre, so the pair points together
+   instead of apart. Mirroring the whole icon would be a no-op — two opposed
+   chevrons are point-symmetric, so the flip maps the arrangement onto itself. */
+[data-flwr] .n58-zapier_expand[aria-pressed="true"] .n58-zapier_ico polygon {
+  transform: scaleY(-1);
 }
 
 /* ── Fullscreen ───────────────────────────────────────────────────────────
