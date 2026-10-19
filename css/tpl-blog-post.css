@@ -76,9 +76,6 @@
   row-gap: var(--_spacing---step--4);
   max-width: 64ch;
 }
-.tpl-blog_hero_title {
-  max-width: 20ch;
-}
 
 /* category chip + tags use the real n58-badge (project.css), not an invented pill. */
 

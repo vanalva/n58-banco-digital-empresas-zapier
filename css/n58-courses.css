@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   N’EMPRENDE · CAPACITACIONES — layout glue only (n-emprende-empresas.html)
+   The parts are existing chrome: the notched photo frame (f-notch f-notch-lg
+   on .n58-gallery-card), the flwr marquee engine (draggable + hover-pause, as
+   on the arch galleries and the FX ticker), and the dark news-popup modal
+   (.antifraud-dialog.n58-news-popup + .n58-modal-close). This file only sizes
+   the card, lays out its text block, and widens the popup for a 16:9 video.
+   Pattern lifted from the Pernia reel (glass-lab pg-reel): video cards on an
+   infinite drag rail, video plays on hover on desktop, never on phones.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.n58-courses_head {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--_spacing---step--2);
+  margin-bottom: var(--_spacing---step--6);
+}
+
+[data-flwr] .flwr_marquee_track.n58-courses_track {
+  column-gap: var(--_spacing---step--5);
+  align-items: flex-start;
+}
+
+.n58-course {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--_spacing---step--3);
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: clamp(15rem, 22vw, 20rem);
+  padding-top: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  background-color: transparent;
+  color: inherit;
+  text-align: left;
+  /* The marquee track sets nowrap for its items; card copy must wrap. */
+  white-space: normal;
+  cursor: pointer;
+}
+.n58-course:hover {
+  --n58-course-t: scale(1.04);
+  --n58-course-more-o: 1;
+}
+.n58-course:focus-visible {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: var(--_palette---core--500);
+  outline-offset: 4px;
+}
+
+/* The media frame is a .n58-gallery-card (notched); this only fixes its ratio
+   to the vertical reel format and keeps the photo/video filling it. */
+[data-flwr] .n58-gallery-card.n58-course_media {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  background-color: var(--_palette---neutral--900);
+}
+.n58-course_poster {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: var(--n58-course-t, none);
+  transition-property: transform;
+  transition-duration: 500ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0s;
+}
+
+.n58-course_body {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--_spacing---step--2);
+  align-items: flex-start;
+}
+.n58-course_more {
+  display: flex;
+  align-items: center;
+  column-gap: var(--_spacing---step--2);
+  color: var(--_palette---core--500);
+  opacity: var(--n58-course-more-o, 0.8);
+  transition-property: opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+  transition-delay: 0s;
+}
+.n58-course_more-icon {
+  display: block;
+  width: 0.5rem;
+  height: auto;
+}
+
+/* Popup: same dark news-popup card, wider, video 16:9, text left-aligned. */
+[data-flwr] .n58-news-popup.n58-course-dialog {
+  --n58-popup-w: min(48rem, calc(100vw - 2rem));
+  overflow-y: auto;
+}
+.n58-course-panel_media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 55vh;
+  object-fit: cover;
+  background-color: var(--_palette---neutral--900);
+}
+[data-flwr] .n58-news-popup_body.n58-course-panel_body {
+  align-items: flex-start;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* Phones: the marquee becomes a native swipe row (see the inline swap script). */
+@media (max-width: 991px) {
+  .n58-course {
+    width: min(18rem, 78vw);
+  }
+  [data-flwr] .flwr_marquee_track.n58-courses_track.is-scroller {
+    padding-bottom: var(--_spacing---step--3);
+  }
+}

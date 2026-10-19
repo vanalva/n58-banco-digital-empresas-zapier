@@ -759,7 +759,7 @@
       var autoplay         = attrBool(wrap, 'data-flwr-swiper-autoplay', false);
       var speed            = parseInt(attr(wrap, 'data-flwr-swiper-speed', '600'), 10) || 600;
       var autoplayDelay    = parseInt(attr(wrap, 'data-flwr-swiper-autoplay-delay', '4000'), 10) || 4000;
-      /* The track spaces slides with CSS gap (--_component---swiper--gap). Swiper
+      /* The track spaces slides with CSS gap (--_component---swiper--gap). Swiper 8
          leaves CSS gap out of its snap grid, so rendered slides and drag/navigation
          positions drift apart. Measure the gap, hand it to Swiper as spaceBetween,
          and zero the CSS gap so it is not applied twice. */
@@ -783,7 +783,7 @@
         slideToClickedSlide: slideToClicked,
         speed: speed,
         loop: loop,
-        loopAdditionalSlides: 0,
+        loopAdditionalSlides: 10,
         spaceBetween: swiperGap,
         watchOverflow: true,
         slideActiveClass: 'is-active',
@@ -808,27 +808,14 @@
           pauseOnMouseEnter: true
         };
       }
-      function mountSwiper() {
-        if (u.dead) return;
-        if (!el.offsetWidth) { u.timeout(mountSwiper, 200); return; }
-        try {
-          var sw = new window.Swiper(el, config);
-          /* Swiper's own teardown: listeners, loop state, its classes and
-             inline styles (deleteInstance + cleanStyles). */
-          u.undo(function () { try { if (sw && !sw.destroyed) sw.destroy(true, true); } catch (_) {} });
-        } catch (err) {
-          console.warn('[flwr] swiper init failed', err);
-        }
+      try {
+        var sw = new window.Swiper(el, config);
+        /* Swiper's own teardown: listeners, loop duplicates, its classes and
+           inline styles (deleteInstance + cleanStyles). */
+        u.undo(function () { try { if (sw && !sw.destroyed) sw.destroy(true, true); } catch (_) {} });
+      } catch (err) {
+        console.warn('[flwr] swiper init failed', err);
       }
-      // A closed dialog has no slide geometry. Initialize when it becomes visible.
-      if (!el.offsetWidth && typeof ResizeObserver === 'function') {
-        var visibilityObserver = u.observe(new ResizeObserver(function () {
-          if (u.dead || !el.offsetWidth) return;
-          visibilityObserver.disconnect();
-          mountSwiper();
-        }));
-        visibilityObserver.observe(el);
-      } else mountSwiper();
     });
   }
 

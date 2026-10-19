@@ -90,6 +90,10 @@
       var viewer = document.createElement('spline-viewer');
       viewer.setAttribute('url', stage.getAttribute('data-n58-spline'));
       viewer.setAttribute('loading', 'eager');
+      /* Pointer events from the whole page, not just the scene's box, so a scene that
+         looks at the cursor (AlaN) keeps following it anywhere on the page. Opt out per
+         stage with data-n58-spline-events="local". */
+      viewer.setAttribute('events-target', stage.getAttribute('data-n58-spline-events') || 'global');
       stage.appendChild(viewer);
       var revealed = false;
       function reveal() {

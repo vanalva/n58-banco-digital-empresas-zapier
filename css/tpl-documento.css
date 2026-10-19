@@ -174,10 +174,6 @@
 [data-flwr] .tpl-doc-hero_title {
   font-size: clamp(1.75rem, calc(1.75rem + ((min(1vw, 1cqi) - 0.2rem) * 1.786)), 3rem);
   line-height: var(--_typography---leading--tight);
-  text-wrap: balance;
-}
-.tpl-doc-hero_desc {
-  max-width: 46ch;
 }
 /* Meta row — updated date + reading affordance, divided by hairlines. */
 .tpl-doc-meta {
@@ -393,6 +389,13 @@
 
 [data-flwr] .tpl-doc_block {
   scroll-margin-top: var(--tpl-navoffset);
+}
+/* Clause and table headings of legal documents run the full reading column; flwr 1.7's
+   per-heading measure (24/30/36ch) wrapped long titles early. */
+[data-flwr] .tpl-doc_h2,
+[data-flwr] .tpl-doc_h3,
+[data-flwr] .tpl-doc_h4 {
+  max-width: none;
 }
 
 /* Lead / intro paragraph. */

@@ -59,7 +59,7 @@
      Everything that rounds corners reads ONE of these three — no ad-hoc px.
        card    = large surfaces: media, masks, bleed/hero cards, section cards,
                  frames  (flwr lg / 0.75rem / 12px). We override flwr's card token
-                 so f-rich-text, map popups, etc. inherit the same value. Kept
+                 so f-flow, map popups, etc. inherit the same value. Kept
                  fairly tight so it stays in the same restrained family as the
                  4px controls (3× the control radius) rather than reading soft.
        control = small elements: button faces, bars, notches, small insets.
@@ -528,7 +528,6 @@ html.n58-reader-open {
   line-height: 1.15;
   margin-top: var(--_spacing---step--1);
   margin-bottom: 0;
-  text-wrap: balance;
 }
 [data-flwr] .n58-reader_docmeta {
   font-size: var(--_typography---size--tiny);
@@ -1320,7 +1319,7 @@ body {
   color: var(--_component---fsmenu--text);
 }
 [data-flwr] .n58-fsmenu_card.is-open {
-  --n58-notch-fill: var(--_theme---surface--raised); /* f-mode-dark: neutral--800, one step lighter than the menu surface (neutral--900) */
+  --n58-notch-fill: var(--_section---surface-raised); /* f-mode-dark: neutral--800, one step lighter than the menu surface (neutral--900) */
   --n58-fsm-rows: 1fr;
   --n58-fsm-rot: -90deg;
   --n58-fsm-vis: visible;
@@ -2168,8 +2167,12 @@ body {
 }
 
 [data-flwr] .n58-reveal-stack_item {
-  max-width: 100%;
   min-width: 0;
+}
+/* :where() keeps this at zero specificity so flwr's per-text-style measure (1.7)
+   still caps the paragraphs and titles inside a stack; non-text items stay 100%. */
+:where([data-flwr]) .n58-reveal-stack_item {
+  max-width: 100%;
 }
 /* Tablet 2-col splits: "Financiamiento" at the fluid h1 size is wider than the
    half column (374px in 340px) and pushed the page sideways. */
@@ -5455,7 +5458,7 @@ body {
    resting (light on dark) or flooded (dark ink on coral); only the lift and the
    tile height ease. */
 [data-flwr] .n58-stat-figure {
-  color: var(--n58-stat-ink, var(--_theme---text--strong));
+  color: var(--n58-stat-ink, var(--_section---text-strong));
   transform: var(--n58-stat-lift, none);
   transition-property: color, transform;
   transition-duration: 1ms, 260ms;
@@ -5464,7 +5467,7 @@ body {
 }
 
 [data-flwr] .n58-stat-label {
-  color: var(--n58-stat-ink, var(--_theme---text--muted));
+  color: var(--n58-stat-ink, var(--_section---text-muted));
   transition-property: color;
   transition-duration: 1ms;
   transition-delay: 0s;
@@ -6887,10 +6890,10 @@ html.n58-zapier-open body {
 /* R9 · conocenos stat labels: the muted text utility must never beat the
    state ink (dark ink on a flooded tile). Chained, not descendant. */
 [data-flwr] .n58-stat-figure.f-text-color-strong {
-  color: var(--n58-stat-ink, var(--_theme---text--strong));
+  color: var(--n58-stat-ink, var(--_section---text-strong));
 }
 [data-flwr] .n58-stat-label.f-text-color-muted {
-  color: var(--n58-stat-ink, var(--_theme---text--muted));
+  color: var(--n58-stat-ink, var(--_section---text-muted));
 }
 /* Keyboard focus for the visually hidden radio input: ring on the painted wrapper. */
 [data-flwr] .flwr_field_radio_wrap:focus-within {
@@ -6900,107 +6903,18 @@ html.n58-zapier-open body {
   outline-offset: 3px;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TYPOGRAPHY DEFAULTS — orphans + measure (site-wide, N58)
-   Client complaint: single words alone on the last line ("cambio.",
-   "complicaciones.") and wildly different paragraph widths between pages.
-   Root cause of the width drift: `.n58-reveal-stack_item { max-width: 100% }`
-   (earlier in this file) out-ranked the framework's opt-in `.f-max-w-40ch`
-   on every reveal-stack paragraph, so those intros ran the full column while
-   other pages kept their cap. The caps below are chained (3 classes) so they
-   win over both, and they are tuned per text size: ch = 0.6em in this font.
-   Everything here is opt-out-able: a utility such as `.f-text-nowrap` or
-   `.f-text-pretty` still wins because the text-wrap rules use :where().
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* Typography wrap + measure: owned by flwr 1.7 (per text style `--_text-style---wrap` /
+   `--_text-style---measure`, the f-flow prose wrapper, f-measure-none, f-text-wrap-default).
+   N58's former site-wide text-wrap and ch-cap overrides were removed in the 1.7 upgrade.
+   Component widths that are deliberate (reader body, gallery caption, steps panel) stay
+   with their own component rules. */
 
-/* ── EMBED-ONLY · text-wrap ─────────────────────────────────────────────────
-   Webflow's styleLess rejects `text-wrap` (same reason the framework keeps
-   .f-text-balance / .f-text-pretty in its runtime embed). Keep this block in
-   the CSS embed. Order matters: pretty first, balance second, so a paragraph
-   that carries a heading text-style class (p.f-text-h4) ends up balanced.
-   - balance : headings, <=6 lines in Chromium; no orphan, even line lengths.
-   - pretty  : body copy; Chrome/Safari 26+ avoid a short last line. Older
-               engines ignore it and wrap normally (no fallback on purpose).
-   text-wrap inherits, so list items with inner spans / captions with nested
-   <strong> are covered through their block parent. */
-[data-flwr] :where(p, li, blockquote, figcaption, dd, dt) { text-wrap: pretty; }
-[data-flwr] :where(h1, h2, h3, h4, h5, h6,
-                   .f-text-display, .f-text-h1, .f-text-h2, .f-text-h3,
-                   .f-text-h4, .f-text-h5, .f-text-h6) { text-wrap: balance; }
-/* Short copy (<=6 lines) also balances: hero/section leads and intros, card
-   and slide descriptions, captions, blog excerpts. `pretty` alone leaves a
-   2-line card paragraph ending on one word ("…en un solo / espacio."). */
-[data-flwr] :where(.f-text-lead,
-                   .f-text-body.f-max-w-40ch, .f-text-body.f-max-w-50ch, .f-text-body.f-max-w-60ch,
-                   .tpl-feat_back_desc, .tpl-benef_slide_desc, .tpl-resources_lede,
-                   .flwr_blog_card_excerpt, .n58-gallery-cap, .n58-gallery-cap_desc,
-                   .tpl-feat_front p) { text-wrap: balance; }
-/* Long-form reading (legal documents, blog articles, Modo lectura): plain greedy
-   wrapping. `pretty` re-flows the last lines of every paragraph to dodge a short
-   final line, which on a phone leaves visibly ragged lines that read as forced
-   breaks. Long copy needs full-width lines, not tidy endings. */
-[data-flwr] .tpl-doc_p,
-[data-flwr] .tpl-doc_li,
-[data-flwr] .tpl-doc-lead,
-[data-flwr] .tpl-blog_p,
-[data-flwr] .tpl-blog_li,
-[data-flwr] .tpl-blog_lead { text-wrap: wrap; }
-
-/* ── Measure · hero + section titles (styleLess-safe) ───────────────────────
-   Display titles break into more lines on a tighter measure, like the
-   n-emprende hero ("Cada negocio que nace / es una decisión"). Existing <br>
-   breaks are all shorter than these caps, so designed breaks are untouched. */
-[data-flwr] .f-text-display.tpl-hero_title,
-[data-flwr] .f-text-display.tpl-doc-hero_title,
-[data-flwr] .f-text-display.tpl-blog_hero_title,
-[data-flwr] .f-text-display.tpl-cat-hero_title,
-[data-flwr] .f-text-display.n58-emp-banner_title,
-[data-flwr] h1.f-text-display.n58-hero_stack-item { max-width: 16ch; }
-/* Section titles that use the h1 text style (tpl-sec-head, benefits, bleeds). */
-[data-flwr] h2.f-text-h1,
-[data-flwr] h3.f-text-h1 { max-width: 20ch; }
-
-/* ── Measure · lead paragraphs (heroes, blog/doc heroes, section heads) ─────
-   ~38ch at lead size = 3 balanced lines for a 100-120 character intro on
-   desktop instead of one full-column 2-line block. */
-[data-flwr] .f-text-lead,
-[data-flwr] .f-text-lead.f-max-w-40ch { max-width: 46ch; }
-/* Desktop heroes have a wide display title, so the lead gets more room (about
-   2-3 balanced lines). A CSS-only tie to the rendered title width is not
-   possible without :has()/fit-content wrappers that fight the reveal-stack flex
-   column and the centered variants, so this is a per-breakpoint cap. Desktop
-   first (max-width only): <=991px narrows back to 38ch. */
-@media (max-width: 991px) {
-  [data-flwr] .f-text-lead,
-  [data-flwr] .f-text-lead.f-max-w-40ch { max-width: 38ch; }
-}
-
-/* ── Measure · body intros (section heads, ledes under titles) ──────────────
-   The site mixes 40ch / 50ch / 60ch on identical roles; one value for all. */
-[data-flwr] .f-text-body.f-max-w-40ch,
-[data-flwr] .f-text-body.f-max-w-50ch,
-[data-flwr] .f-text-body.f-max-w-60ch { max-width: 54ch; }
-/* Desktop gives wide section titles a wider intro (~2-3 lines under a 2-line
-   h1); <=991px titles narrow, so the intro narrows with them. */
-@media (max-width: 991px) {
-  [data-flwr] .f-text-body.f-max-w-40ch,
-  [data-flwr] .f-text-body.f-max-w-50ch,
-  [data-flwr] .f-text-body.f-max-w-60ch { max-width: 42ch; }
-}
-
-/* ── Measure · running prose (documents, blog, FAQ answers) = f-max-w-prose ─ */
-[data-flwr] .tpl-doc_p,
-[data-flwr] .tpl-blog_p,
-[data-flwr] .home-faq_p { max-width: 65ch; }
-
-/* Centered contexts keep centering once a cap is applied. Flex-column parents
-   (tpl-hero_text, tpl-sec-head--center) already center through align-items. */
-[data-flwr] .f-text-center.f-text-lead,
-[data-flwr] .f-text-center.f-text-body,
-[data-flwr] .f-text-center.f-text-display,
-[data-flwr] .f-text-center.f-text-h1 {
-  margin-left: auto;
-  margin-right: auto;
+/* 1.7 applies a per-style measure to baseline p / h1-h6 everywhere. Boxed messages
+   (alerts, form field messages) are meant to fill their box, so they opt out here
+   on their own classes (the f-measure-none utility cannot be added without touching pages). */
+[data-flwr] .flwr_alert_text,
+[data-flwr] .flwr_field_message {
+  max-width: none;
 }
 
 /* ── Modal scroll lock — toggled by assets/n58-dialogs.js on <html> and <body>
@@ -7048,6 +6962,16 @@ html.n58-zapier-open body {
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scrollbar-width: thin;
+  /* the scroll container clips on both axes: pad so outlines / focus rings fit,
+     pull the box back out so the chips' visible edge does not move */
+  padding-top: 0.25rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.25rem;
+  padding-left: 0.5rem;
+  margin-top: -0.25rem;
+  margin-right: -0.5rem;
+  margin-bottom: -0.25rem;
+  margin-left: -0.5rem;
 }
 [data-flwr] .flwr_chip.faq-index_link {
   justify-content: flex-start;
@@ -7097,7 +7021,6 @@ html.n58-zapier-open body {
   margin-bottom: var(--_spacing---step--5);
   max-width: 100%;
 }
-.faq-group_head h3 { text-wrap: balance; }
 [data-flwr] .home-faq_list.faq-group_list {
   max-width: none;
   margin-left: 0;
@@ -7114,7 +7037,7 @@ html.n58-zapier-open body {
     z-index: 2;
     margin-left: calc(-1 * var(--_spacing---page-margin));
     margin-right: calc(-1 * var(--_spacing---page-margin));
-    background-color: var(--_theme---surface--main);
+    background-color: var(--_section---surface);
     border-bottom-width: var(--_theme---border--width-1);
     border-bottom-style: solid;
     border-bottom-color: var(--_section---border);
@@ -7135,11 +7058,11 @@ html.n58-zapier-open body {
   }
   .faq-index_wrap::before {
     left: 0;
-    background-image: linear-gradient(to right, var(--_theme---surface--main), transparent);
+    background-image: linear-gradient(to right, var(--_section---surface), transparent);
   }
   .faq-index_wrap::after {
     right: 0;
-    background-image: linear-gradient(to left, var(--_theme---surface--main), transparent);
+    background-image: linear-gradient(to left, var(--_section---surface), transparent);
   }
   .faq-index {
     flex-direction: row;
@@ -7153,6 +7076,10 @@ html.n58-zapier-open body {
     padding-bottom: var(--_spacing---step--3);
     padding-left: var(--_spacing---page-margin);
     padding-right: var(--_spacing---page-margin);
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
   }
   [data-flwr] .flwr_chip.faq-index_link.is-sub { padding-left: 0.75rem; }
   [data-flwr] .flwr_chip.faq-index_link {
@@ -7184,7 +7111,7 @@ html.n58-zapier-open body {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   N EMPRENDE · POSTULACIÓN — layout glue only (n-emprende-empresas.html #postulacion)
+   N’EMPRENDE · POSTULACIÓN — layout glue only (n-emprende-empresas.html #postulacion)
    Every look is an existing flwr class: flwr_stepper_*, flwr_field_*, flwr_chip,
    flwr_alert_*, flwr_button_*. This block only (1) resets <fieldset>/<legend>/<ol>
    browser chrome, (2) animates the step swap, (3) keyboard focus on the visually
@@ -7339,11 +7266,21 @@ html.n58-zapier-open body {
   transform: translateY(-50%) rotate(-90deg);
 }
 
-/* ── Select · the list = navbar dropdown panel, hung under the field on the navbar's dark surface */
+/* Stacking: the page's reveal wrappers (transform) make each section's content its own stacking
+   context, so a list hanging past its section's bottom edge paints UNDER the next section's content.
+   While a list is open the host section (class toggled by n58-forms.js) is lifted above its siblings. */
+[data-flwr] .has-select-open {
+  position: relative;
+  z-index: 30;
+}
+
+/* ── Select · the list = navbar dropdown panel, hung under the field. It reads the SECTION tokens
+   (--_section---surface / text), so it follows the f-mode-* of the section it sits in: ink panel +
+   cream text in dark sections, white panel + ink text in light ones (the nav's light bar uses the
+   same ink-on-cream reading). Borders, scrollbar and arrow track currentColor. Lime hover keeps ink. */
 [data-flwr] .n58-select_list {
-  --_section---surface: var(--_palette---neutral--900);
-  --_section---text: var(--_palette---neutral--50);
   --_component---navbar--accent: var(--_palette---core--500);
+  color: var(--_section---text);
   top: calc(100% + var(--_spacing---step--1));
   right: 0;
   left: 0;
@@ -7353,11 +7290,11 @@ html.n58-zapier-open body {
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklab, var(--_palette---neutral--50) 35%, transparent) transparent;
-  border-top-color: color-mix(in oklab, var(--_palette---neutral--50) 18%, transparent);
-  border-right-color: color-mix(in oklab, var(--_palette---neutral--50) 18%, transparent);
-  border-bottom-color: color-mix(in oklab, var(--_palette---neutral--50) 18%, transparent);
-  border-left-color: color-mix(in oklab, var(--_palette---neutral--50) 18%, transparent);
+  scrollbar-color: color-mix(in oklab, currentColor 35%, transparent) transparent;
+  border-top-color: color-mix(in oklab, currentColor 18%, transparent);
+  border-right-color: color-mix(in oklab, currentColor 18%, transparent);
+  border-bottom-color: color-mix(in oklab, currentColor 18%, transparent);
+  border-left-color: color-mix(in oklab, currentColor 18%, transparent);
   box-shadow: none;
   z-index: var(--_z---dropdown);
 }
@@ -7374,6 +7311,9 @@ html.n58-zapier-open body {
 }
 [data-flwr] .n58-select_option {
   position: relative;
+  /* Opaque row: the rows are composited layers (reveal opacity/transform); a transparent row leaves a
+     sub-pixel seam where what is under the panel shows through. Lit rows below override this. */
+  background-color: var(--_section---surface);
   list-style-type: none;
   cursor: pointer;
   padding-right: calc(var(--_spacing---step--4) + 1.25rem);
@@ -7388,7 +7328,7 @@ html.n58-zapier-open body {
 [data-flwr] .n58-select_option.is-selected {
   font-weight: var(--_typography---weight--semibold);
 }
-/* Selected row carries the N58 arrow (lime on the dark panel, ink while the row is lit). */
+/* Selected row carries the N58 arrow in the row's text colour (ink on light, cream on dark; ink while the row is lit). */
 [data-flwr] .n58-select_option.is-selected::after {
   content: "";
   position: absolute;
@@ -7396,7 +7336,7 @@ html.n58-zapier-open body {
   right: var(--_spacing---step--4);
   width: 0.8em;
   height: 0.8em;
-  background-color: var(--_palette---core--500);
+  background-color: currentColor;
   -webkit-mask-image: url(../assets/images/icons/right-arrow-green.svg);
   mask-image: url(../assets/images/icons/right-arrow-green.svg);
   -webkit-mask-repeat: no-repeat;
@@ -7757,7 +7697,7 @@ html.n58-zapier-open body {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   N EMPRENDE · Webflow form states
+   N’EMPRENDE · Webflow form states
    The form sits in a Webflow form wrapper (w-form) with its done and fail blocks. Webflow's own stylesheet gives
    w-form / w-form-done / w-form-fail a margin, a padding, a grey or pink fill and centred text; the project
    classes reset that so the flwr alert inside is the only visual. Webflow shows a block with an inline display,
@@ -7826,4 +7766,15 @@ html.n58-zapier-open body {
     width: 100%;
     min-height: 0;
   }
+}
+
+/* Hero intros: narrower measure than the lead style's 60ch so a short intro wraps
+   under its title instead of running as one long line. Chained combos beat the
+   lead's own [data-flwr] .f-text-lead rule; wrap stays balance. Phones are narrower
+   than the measure, so nothing changes there. */
+[data-flwr] .f-text-lead.n58-hero_stack-item,
+[data-flwr] .f-text-lead.n58-reveal-stack_item,
+[data-flwr] .f-text-lead.tpl-doc-hero_desc,
+[data-flwr] .f-text-lead.tpl-blog_hero_excerpt {
+  --_text-style---measure: var(--n58-hero-lead-measure);
 }

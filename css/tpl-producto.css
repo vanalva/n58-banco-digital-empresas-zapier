@@ -585,7 +585,6 @@
   margin-left: 0;
   font-size: clamp(1.4rem, 2vw, 1.95rem);
   overflow-wrap: break-word;
-  text-wrap: balance;
   line-height: var(--_typography---leading--ui);
   /* Contain the highlight so it doesn't span the whole card width. min(...,100%)
      matters: a bare 18rem let a long title's inline-block grow WIDER than this

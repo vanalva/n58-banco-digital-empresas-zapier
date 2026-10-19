@@ -106,4 +106,9 @@
      tight, modern multi-line heading. Display stays at its 0.9 "squashed". */
   --_typography---leading--tight: 0.95;
 
+  /* Hero intro measure — flwr 1.7's lead measure (60ch) lets short hero intros run
+     as one line wider than the display title above. Hero intros use this narrower
+     measure (applied as the lead's --_text-style---measure in project.css). */
+  --n58-hero-lead-measure: 42ch;
+
 }

@@ -65,9 +65,6 @@
   flex-shrink: 1;
   flex-basis: 0%;
 }
-.tpl-cat-hero_title {
-  text-wrap: balance;
-}
 .tpl-cat-hero_media {
   flex-grow: 0;
   flex-shrink: 0;

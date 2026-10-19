@@ -587,6 +587,8 @@
       list.classList.toggle('is-up', up);
       list.style.setProperty('--n58-select-max', Math.max(120, Math.min(MAX_LIST, up ? above : below)) + 'px');
     }
+    /* The section that holds the field: lifted above the following sections while a list is open. */
+    var host = wrap.closest ? wrap.closest('section') : null;
     function open() {
       if (trigger.disabled) return;
       if (openSelect && openSelect !== api) openSelect.close(false);
@@ -594,6 +596,7 @@
       place();
       wrap.setAttribute('data-flwr-state', 'open');
       trigger.classList.add('is-open');
+      if (host) host.classList.add('has-select-open');
       trigger.setAttribute('aria-expanded', 'true');
       list.removeAttribute('aria-hidden');
       var cur = itemFor(sel.selectedIndex);
@@ -608,6 +611,7 @@
       if (openSelect === api) openSelect = null;
       wrap.setAttribute('data-flwr-state', '');
       trigger.classList.remove('is-open');
+      if (host) host.classList.remove('has-select-open');
       trigger.setAttribute('aria-expanded', 'false');
       list.setAttribute('aria-hidden', 'true');
       setActive(-1);
@@ -710,7 +714,7 @@
     typeSel.addEventListener('input', apply);
     apply();
   }
-  /* States follow the Webflow form pattern (same as N Emprende): the form sits in div.w-form with a w-form-done and a
+  /* States follow the Webflow form pattern (same as N’Emprende): the form sits in div.w-form with a w-form-done and a
      w-form-fail as direct children. Webflow shows them with an inline display and hides the form; the static preview
      shows them with the hidden attribute (.n58-form_toggle[hidden]). Either way the observer below moves focus to the
      panel title once it appears. */

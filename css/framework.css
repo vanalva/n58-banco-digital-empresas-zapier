@@ -501,7 +501,8 @@
   --_text-style---margin-bottom:  0;
   --_text-style---trim-top:       var(--_typography---trim-top);
   --_text-style---trim-bottom:    var(--_typography---trim-bottom);
-  --_text-style---wrap:           wrap; /* 1.4: text-wrap-mode row (wrap | nowrap) */
+  --_text-style---wrap:           auto; /* 1.7: text-wrap-style keyword per style (balance | pretty | stable | auto); applied in runtime.css */
+  --_text-style---measure:        none; /* 1.7: max line length per style (ch), applied as max-width; none = no cap */
 
 
   /* ====================================================================
@@ -1666,9 +1667,21 @@
 
   /* ===== Webflow-rejected properties (must live in embed) ===== */
   /* text-wrap — Webflow rejects in styleLess, fully Baseline 2026 in browsers */
+  /* 1.7: the wrap row of every text style, applied here (generated) */
+  /* @generated text-styles:wrap begin — edit text-styles.json, then run build-text-styles.mjs */
+/* text styles (1.7): every text-style class, and the carrier components, apply their wrap cell. The Text Style table holds a
+   text-wrap-style keyword per style (balance | pretty | stable | auto; auto = plain greedy wrapping). text-wrap-style, not the text-wrap
+   shorthand: the shorthand would also reset text-wrap-mode and break a white-space: nowrap inherited from a parent (marquee, tabs).
+   Explicit utilities (f-text-balance, -pretty, -nowrap, -wrap-default) come later in this layer or are unlayered, so they win. */
+[data-flwr] :is(.f-text-display, .flwr_hero_headline, .f-text-h1, .f-text-h2, .f-text-h3, .f-text-h4, .f-text-h5, .flwr_blog_card_title, .f-text-h6, .f-text-lead, .flwr_hero_subheadline, .flwr_testimonial_quote, .f-text-body, .f-text-small, .f-text-tiny, .f-text-micro, .f-text-hero, .f-text-poster, .f-text-stat, .f-text-eyebrow, .f-text-label, .f-text-giant) { text-wrap-style: var(--_text-style---wrap); }
+/* un-classed tags (their wrap cell is declared in utilities.css, text-styles:baseline; zero specificity) */
+:where([data-flwr] :is(h1, h2, h3, h4, h5, h6, p, li, dd, dt, figcaption)) { text-wrap-style: var(--_text-style---wrap); }
+/* @generated text-styles:wrap end */
   [data-flwr] .f-text-balance { text-wrap: balance; }
   [data-flwr] .f-text-pretty  { text-wrap: pretty; }
   [data-flwr] .f-text-nowrap  { text-wrap: nowrap; }
+  /* 1.7: plain greedy wrapping on this element (undo a balance / pretty it would otherwise take; leaves nowrap alone) */
+  [data-flwr] .f-text-wrap-default { text-wrap-style: auto; }
 
   /* aspect-ratio — Webflow rejects, native CSS supported */
   [data-flwr] .f-ratio-square    { aspect-ratio: 1 / 1; }
@@ -2129,6 +2142,372 @@
 }
 body:has([data-flwr]) { margin: 0; }
 
+/* @generated text-styles:baseline begin — edit text-styles.json, then run build-text-styles.mjs */
+/* Baseline wrap + measure for un-classed tags (1.7). Zero specificity, so any text-style class, utility or project class wins.
+   Each tag reads the cells of its own text style (h1-h6 -> their column, p -> Body, blockquote -> Lead ...). The text-wrap line itself
+   is in runtime.css (Webflow rejects text-wrap in styleLess). The margin rows are applied only inside .f-flow. */
+:where([data-flwr] h1) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       20ch;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] h2) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       24ch;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] h3) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       30ch;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] h4) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       36ch;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] h5) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] h6) {
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] p) {
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       68ch;
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] li) {
+  --_text-style---wrap:          auto;
+}
+:where([data-flwr] dd) {
+  --_text-style---wrap:          auto;
+}
+:where([data-flwr] dt) {
+  --_text-style---wrap:          auto;
+}
+:where([data-flwr] figcaption) {
+  --_text-style---wrap:          auto;
+}
+/* Alignment coupling (ALIGN in build-text-styles.mjs; f-text-center / -left / -right set the two properties) */
+:where([data-flwr] :is(h1, h2, h3, h4, h5, h6, p, ul, ol)) {
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+/* @generated text-styles:baseline end */
+/* @generated text-styles:flow begin — edit text-styles.json, then run build-text-styles.mjs */
+/* f-flow (1.7): the prose wrapper (LUMOS u-rich-text). Everything inside takes its text style from the Text Style table:
+   un-classed h1-h6, p, ul, ol, li, blockquote, figure get the size, leading, weight, wrap, measure AND the margin rows of their
+   column (a class such as f-text-h3 on a <p> hands over its own column). All descendants, not just children, so CMS rich text with
+   wrapper divs works. Everything is at :where() specificity (classes, utilities and project classes win) EXCEPT the margins of
+   the baseline-reset tags: [data-flwr] h1, h2 ... p, ul, ol, figure, blockquote carry a (0,1,1) margin reset, so their flow margins are
+   declared at the same (0,1,1) tier, later. The first and last child of the wrapper lose their outer margin ((0,2,0), before the
+   margin utilities, so f-margin-* still win). Descendant selectors: this block ships in the embed layer, not styleLess.
+   f-rich-text is kept as an alias (deprecated, 1.7). */
+:where([data-flwr] .f-flow, [data-flwr] .f-rich-text) { display: flow-root; }
+:where([data-flwr] .f-flow h1, [data-flwr] .f-rich-text h1) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h1);
+  --_text-style---weight:        var(--_typography---weight--bold);
+  --_text-style---leading:       var(--_typography---leading--tight);
+  --_text-style---tracking:      var(--_typography---tracking--tight);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--7);
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       20ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow h2, [data-flwr] .f-rich-text h2) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h2);
+  --_text-style---weight:        var(--_typography---weight--bold);
+  --_text-style---leading:       var(--_typography---leading--tight);
+  --_text-style---tracking:      var(--_typography---tracking--tight);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--6);
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       24ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow h3, [data-flwr] .f-rich-text h3) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h3);
+  --_text-style---weight:        var(--_typography---weight--semibold);
+  --_text-style---leading:       var(--_typography---leading--snug);
+  --_text-style---tracking:      var(--_typography---tracking--tight);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--6);
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       30ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow h4, [data-flwr] .f-rich-text h4) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h4);
+  --_text-style---weight:        var(--_typography---weight--semibold);
+  --_text-style---leading:       var(--_typography---leading--snug);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--5);
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       36ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow h5, [data-flwr] .f-rich-text h5) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h5);
+  --_text-style---weight:        var(--_typography---weight--semibold);
+  --_text-style---leading:       var(--_typography---leading--snug);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--5);
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow h6, [data-flwr] .f-rich-text h6) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--h6);
+  --_text-style---weight:        var(--_typography---weight--semibold);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--4);
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow p, [data-flwr] .f-rich-text p) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       68ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow ul, [data-flwr] .f-rich-text ul) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       68ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow ol, [data-flwr] .f-rich-text ol) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       68ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+  margin-inline-start: var(--_flwr-rt---measure-start, 0); margin-inline-end: var(--_flwr-rt---measure-end, 0);
+}
+:where([data-flwr] .f-flow li, [data-flwr] .f-rich-text li) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+}
+:where([data-flwr] .f-flow dd, [data-flwr] .f-rich-text dd) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+}
+:where([data-flwr] .f-flow dt, [data-flwr] .f-rich-text dt) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+}
+:where([data-flwr] .f-flow blockquote, [data-flwr] .f-rich-text blockquote) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--lead);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--relaxed);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       60ch;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+  max-width: var(--_text-style---measure);
+}
+:where([data-flwr] .f-flow figure, [data-flwr] .f-rich-text figure) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--body);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+}
+:where([data-flwr] .f-flow figcaption, [data-flwr] .f-rich-text figcaption) {
+  --_text-style---family:        var(--_typography---family--sans);
+  --_text-style---size:          var(--_typography---size--small);
+  --_text-style---weight:        var(--_typography---weight--regular);
+  --_text-style---leading:       var(--_typography---leading--normal);
+  --_text-style---tracking:      var(--_typography---tracking--normal);
+  --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          auto;
+  font-family:    var(--_text-style---family);
+  font-size:      var(--_text-style---size);
+  line-height:    var(--_text-style---leading);
+  letter-spacing: var(--_text-style---tracking);
+  font-weight:    var(--_text-style---weight);
+  text-transform: var(--_text-style---transform);
+}
+/* margins of the reset tags: same (0,1,1) tier as the baseline reset above, later */
+[data-flwr] :is(h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote):where(.f-flow *, .f-rich-text *) {
+  margin-block-start: var(--_text-style---margin-top);
+  margin-block-end: var(--_text-style---margin-bottom);
+}
+/* list items: tight rhythm, nested lists tuck under their item */
+:where([data-flwr] .f-flow li, [data-flwr] .f-rich-text li) { margin-block-start: 0; margin-block-end: var(--_spacing---step--2); }
+[data-flwr] li > :is(ul, ol):where(.f-flow *, .f-rich-text *) { margin-block-start: var(--_spacing---step--2); margin-block-end: 0; }
+:where([data-flwr] .f-flow blockquote :is(p, ul, ol, li), [data-flwr] .f-rich-text blockquote :is(p, ul, ol, li)) { font-size: inherit; line-height: inherit; max-width: none; }
+/* outer trim: first / last child of the wrapper, of a blockquote and of a list item */
+[data-flwr] :where(.f-flow, .f-rich-text) > :first-child { margin-block-start: 0; }
+[data-flwr] :where(.f-flow, .f-rich-text) > :last-child  { margin-block-end: 0; }
+[data-flwr] :is(blockquote, li) > :first-child:where(.f-flow *, .f-rich-text *) { margin-block-start: 0; }
+[data-flwr] :is(blockquote, li) > :last-child:where(.f-flow *, .f-rich-text *)  { margin-block-end: 0; }
+/* @generated text-styles:flow end */
+
 /* 1.6: the size classes also carry Section Base (Section is a Webflow Variable Collection; Base aliases Theme),
    in their normal (0,2,0) rule. The section theme classes set their Section values in the "section modes" block
    at the end of this file, at the same specificity and later, so a theme class on the same element wins.
@@ -2461,9 +2840,12 @@ body:has([data-flwr]) { margin: 0; }
 /* Text styles: one class per column of the Text Style table. Base column = :root (tokens.css).
    Webflow modes (12 columns with Base): Lead, Small, H6, H5, H4, H3, H2, H1, Display, Eyebrow, Label.
    1.4: every class declares and applies family, size, weight, leading, tracking and transform from its column. The trim
-   rows are read by the trim and inherit (not declared here). wrap and the margin rows are not applied yet (planned for 1.5).
+   rows are read by the trim and inherit (not declared here). 1.7: every class also declares measure, wrap and the margin rows;
+   measure is applied here as max-width, wrap in runtime.css (text-wrap), the margins only inside .f-flow.
    Tune a cell with a variables-only rule on the class, never by restating a property. */
 /* Display — Webflow mode of Text Style */
+/* Column members: .f-text-display + flwr_hero_headline. Edit a cell for all of them with
+   [data-flwr] :is(.f-text-display, .flwr_hero_headline) { --_text-style---<row>: ...; }  (.f-text-display alone reaches only this class) */
 [data-flwr] .f-text-display {
   --_text-style---family:        var(--_typography---family--sans);
   --_text-style---size:          var(--_typography---size--display);
@@ -2471,12 +2853,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--squashed);
   --_text-style---tracking:      var(--_typography---tracking--tighter);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--7);
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       18ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H1 — Webflow mode of Text Style */
 [data-flwr] .f-text-h1 {
@@ -2486,12 +2873,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--tight);
   --_text-style---tracking:      var(--_typography---tracking--tight);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--7);
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       20ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H2 — Webflow mode of Text Style */
 [data-flwr] .f-text-h2 {
@@ -2501,12 +2893,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--tight);
   --_text-style---tracking:      var(--_typography---tracking--tight);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--6);
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       24ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H3 — Webflow mode of Text Style */
 [data-flwr] .f-text-h3 {
@@ -2516,12 +2913,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--snug);
   --_text-style---tracking:      var(--_typography---tracking--tight);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--6);
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       30ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H4 — Webflow mode of Text Style */
 [data-flwr] .f-text-h4 {
@@ -2531,14 +2933,21 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--snug);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--5);
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       36ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H5 — Webflow mode of Text Style */
+/* Column members: .f-text-h5 + flwr_blog_card_title. Edit a cell for all of them with
+   [data-flwr] :is(.f-text-h5, .flwr_blog_card_title) { --_text-style---<row>: ...; }  (.f-text-h5 alone reaches only this class) */
 [data-flwr] .f-text-h5 {
   --_text-style---family:        var(--_typography---family--sans);
   --_text-style---size:          var(--_typography---size--h5);
@@ -2546,12 +2955,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--snug);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--5);
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* H6 — Webflow mode of Text Style */
 [data-flwr] .f-text-h6 {
@@ -2561,14 +2975,21 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--normal);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--4);
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Lead — Webflow mode of Text Style */
+/* Column members: .f-text-lead + flwr_hero_subheadline, flwr_testimonial_quote. Edit a cell for all of them with
+   [data-flwr] :is(.f-text-lead, .flwr_hero_subheadline, .flwr_testimonial_quote) { --_text-style---<row>: ...; }  (.f-text-lead alone reaches only this class) */
 [data-flwr] .f-text-lead {
   --_text-style---family:        var(--_typography---family--sans);
   --_text-style---size:          var(--_typography---size--lead);
@@ -2576,12 +2997,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--relaxed);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       60ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Body — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-body {
@@ -2591,12 +3017,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--normal);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--4);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       68ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Small — Webflow mode of Text Style */
 [data-flwr] .f-text-small {
@@ -2606,12 +3037,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--normal);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--3);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       72ch;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Tiny — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-tiny {
@@ -2621,12 +3057,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--snug);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Micro — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-micro {
@@ -2636,12 +3077,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--snug);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Hero — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-hero {
@@ -2651,12 +3097,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--display);
   --_text-style---tracking:      var(--_typography---tracking--tighter);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--7);
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Poster — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-poster {
@@ -2666,12 +3117,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--squashed);
   --_text-style---tracking:      var(--_typography---tracking--tightest);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    var(--_spacing---step--7);
+  --_text-style---margin-bottom: var(--_spacing---step--5);
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Stat — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 [data-flwr] .f-text-stat {
@@ -2681,12 +3137,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--none);
   --_text-style---tracking:      var(--_typography---tracking--tighter);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: 0;
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Eyebrow — Webflow mode of Text Style */
 /* Column members: .f-text-eyebrow + flwr_eyebrow. Edit a cell for all of them with
@@ -2698,12 +3159,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--ui);
   --_text-style---tracking:      var(--_typography---tracking--widest);
   --_text-style---transform:     var(--_typography---transform--upper);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: var(--_spacing---step--2);
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Label — Webflow mode of Text Style */
 /* Column members: .f-text-label + flwr_button_primary, flwr_button_secondary, flwr_button_ghost, flwr_button_alert, flwr_button_link. Edit a cell for all of them with
@@ -2715,12 +3181,17 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--none);
   --_text-style---tracking:      var(--_typography---tracking--normal);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: 0;
+  --_text-style---wrap:          auto;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   font-size:      var(--_text-style---size);
   line-height:    var(--_text-style---leading);
   letter-spacing: var(--_text-style---tracking);
   font-weight:    var(--_text-style---weight);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Giant — class-based (same CSS; not a Webflow mode, see text-styles.json webflowModes) */
 /* size, leading, tracking, weight are applied in the text-styles:late block (the 1.3 position) */
@@ -2731,8 +3202,13 @@ body:has([data-flwr]) { margin: 0; }
   --_text-style---leading:       var(--_typography---leading--squashed);
   --_text-style---tracking:      var(--_typography---tracking--tightest);
   --_text-style---transform:     var(--_typography---transform--none);
+  --_text-style---margin-top:    0;
+  --_text-style---margin-bottom: 0;
+  --_text-style---wrap:          balance;
+  --_text-style---measure:       none;
   font-family:    var(--_text-style---family);
   text-transform: var(--_text-style---transform);
+  max-width:      var(--_text-style---measure);
 }
 /* Size-only UI label utilities (one row, no mode) */
 [data-flwr] .f-text-ui-xs { --_text-style---size: var(--_typography---size--ui-xs, var(--_typography---size--tiny)); font-size: var(--_text-style---size); }
@@ -2773,9 +3249,12 @@ body:has([data-flwr]) { margin: 0; }
 [data-flwr] .f-text-normal-case { text-transform: none; }
 
 /* Alignment — direct */
-[data-flwr] .f-text-left    { text-align: left; }
-[data-flwr] .f-text-center  { text-align: center; }
-[data-flwr] .f-text-right   { text-align: right; }
+/* 1.7: alignment also sets the two inherited properties that place a measured element's box (see text-styles:baseline), so a
+   centered heading or paragraph with a measure centers its box, not just its text. An element that sets text-align another way
+   (project CSS) sets them too, or sits in a .f-text-center / -left / -right parent. */
+[data-flwr] .f-text-left    { text-align: left;   --_flwr-rt---measure-start: 0;    --_flwr-rt---measure-end: auto; }
+[data-flwr] .f-text-center  { text-align: center; --_flwr-rt---measure-start: auto; --_flwr-rt---measure-end: auto; }
+[data-flwr] .f-text-right   { text-align: right;  --_flwr-rt---measure-start: auto; --_flwr-rt---measure-end: 0; }
 [data-flwr] .f-text-justify { text-align: justify; }
 
 /* Leading utilities */
@@ -3290,6 +3769,8 @@ body:has([data-flwr]) { margin: 0; }
 [data-flwr] .f-max-w-50ch { max-width: 50ch; }
 [data-flwr] .f-max-w-60ch { max-width: 60ch; }
 [data-flwr] .f-max-w-80ch { max-width: 80ch; }
+/* 1.7: opt out of a text style's measure (the f-max-w-*ch utilities above and this one beat it: same specificity, later in the file) */
+[data-flwr] .f-measure-none { max-width: none; }
 
 [data-flwr] .f-min-w-0    { min-width: 0; }
 [data-flwr] .f-min-w-full { min-width: 100%; }
@@ -3481,36 +3962,27 @@ body:has([data-flwr]) { margin: 0; }
 
 
 /* ====================================================================
-   RICH TEXT SCOPE (descendants of .f-rich-text inherit Flower typography)
+   F-FLOW EXTRAS (1.7) — the prose details the Text Style rows do not cover.
+   The sizes, leading, margins, wrap and measure of headings, paragraphs and lists come from the
+   generated f-flow block (text-styles:flow, near the top of this file). f-rich-text is the
+   pre-1.7 name of the same wrapper and keeps working as an alias. All :where(): zero specificity.
    ==================================================================== */
 
-[data-flwr] .f-rich-text > h1 { font-size: var(--_typography---size--h1); line-height: var(--_typography---leading--tight); font-weight: var(--_typography---weight--bold); margin-block: 0 var(--_spacing---step--5); }
-[data-flwr] .f-rich-text > h2 { font-size: var(--_typography---size--h2); line-height: var(--_typography---leading--tight); font-weight: var(--_typography---weight--bold); margin-block: var(--_spacing---step--6) var(--_spacing---step--4); }
-[data-flwr] .f-rich-text > h3 { font-size: var(--_typography---size--h3); line-height: var(--_typography---leading--snug);  font-weight: var(--_typography---weight--semibold); margin-block: var(--_spacing---step--6) var(--_spacing---step--3); }
-[data-flwr] .f-rich-text > h4 { font-size: var(--_typography---size--h4); line-height: var(--_typography---leading--snug);  font-weight: var(--_typography---weight--semibold); margin-block: var(--_spacing---step--5) var(--_spacing---step--3); }
-[data-flwr] .f-rich-text > h5 { font-size: var(--_typography---size--h5); font-weight: var(--_typography---weight--semibold); margin-block: var(--_spacing---step--5) var(--_spacing---step--2); }
-[data-flwr] .f-rich-text > h6 { font-size: var(--_typography---size--h6); font-weight: var(--_typography---weight--semibold); margin-block: var(--_spacing---step--4) var(--_spacing---step--2); }
-[data-flwr] .f-rich-text > p  { font-size: var(--_typography---size--body); line-height: var(--_typography---leading--relaxed); margin-block: 0 var(--_spacing---step--4); }
-[data-flwr] .f-rich-text > ul,
-[data-flwr] .f-rich-text > ol { padding-inline-start: var(--_spacing---step--5); margin-block: 0 var(--_spacing---step--4); }
-[data-flwr] .f-rich-text > ul > li,
-[data-flwr] .f-rich-text > ol > li { margin-block-end: var(--_spacing---step--2); }
-[data-flwr] .f-rich-text > blockquote {
+:where([data-flwr] .f-flow ul, [data-flwr] .f-rich-text ul,
+       [data-flwr] .f-flow ol, [data-flwr] .f-rich-text ol) { padding-inline-start: var(--_spacing---step--5); }
+:where([data-flwr] .f-flow blockquote, [data-flwr] .f-rich-text blockquote) {
   border-inline-start: 4px solid var(--_theme---border--accent);
   padding-inline-start: var(--_spacing---step--4);
-  font-size: var(--_typography---size--lead);
   font-style: italic;
   color: var(--_section---text-muted);
-  margin-block: var(--_spacing---step--5);
 }
-[data-flwr] .f-rich-text a { color: var(--_theme---text--link); text-decoration: underline; text-underline-offset: 0.2em; }
-[data-flwr] .f-rich-text a:hover { color: var(--_theme---text--link-hover); }
-[data-flwr] .f-rich-text img { max-width: 100%; height: auto; border-radius: var(--_component---card--radius); margin-block: var(--_spacing---step--5); }
-[data-flwr] .f-rich-text figure { margin-block: var(--_spacing---step--5); }
-[data-flwr] .f-rich-text figcaption { font-size: var(--_typography---size--small); color: var(--_section---text-muted); margin-block-start: var(--_spacing---step--2); text-align: center; }
-[data-flwr] .f-rich-text code { font-family: var(--_typography---family--mono); font-size: 0.9em; background: var(--_section---surface-sunken); padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
-[data-flwr] .f-rich-text pre { background: var(--_section---surface-sunken); padding: var(--_spacing---step--4); border-radius: var(--_component---card--radius); overflow-x: auto; margin-block: var(--_spacing---step--5); }
-[data-flwr] .f-rich-text hr { border: none; border-block-start: 1px solid var(--_section---border-subtle); margin-block: var(--_spacing---step--6); }
+:where([data-flwr] .f-flow a, [data-flwr] .f-rich-text a) { color: var(--_theme---text--link); text-decoration: underline; text-underline-offset: 0.2em; }
+:where([data-flwr] .f-flow a:hover, [data-flwr] .f-rich-text a:hover) { color: var(--_theme---text--link-hover); }
+:where([data-flwr] .f-flow img, [data-flwr] .f-rich-text img) { max-width: 100%; height: auto; border-radius: var(--_component---card--radius); margin-block: var(--_spacing---step--5); }
+:where([data-flwr] .f-flow figcaption, [data-flwr] .f-rich-text figcaption) { color: var(--_section---text-muted); margin-block-start: var(--_spacing---step--2); text-align: center; }
+:where([data-flwr] .f-flow code, [data-flwr] .f-rich-text code) { font-family: var(--_typography---family--mono); font-size: 0.9em; background: var(--_section---surface-sunken); padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
+:where([data-flwr] .f-flow pre, [data-flwr] .f-rich-text pre) { background: var(--_section---surface-sunken); padding: var(--_spacing---step--4); border-radius: var(--_component---card--radius); overflow-x: auto; margin-block: var(--_spacing---step--5); }
+:where([data-flwr] .f-flow hr, [data-flwr] .f-rich-text hr) { border: none; border-block-start: 1px solid var(--_section---border-subtle); margin-block: var(--_spacing---step--6); }
 
 
 /* ====================================================================
@@ -4105,7 +4577,7 @@ body:has([data-flwr]) { margin: 0; }
 
 /* @generated text-styles:carrier:label begin — edit text-styles.json, then run build-text-styles.mjs */
 /* Member of the Label column (text-styles.json): declares and applies family, size, weight, leading; tracking, transform at :where() specificity (below).
-   Not applied yet (planned for 1.5): wrap, margin-top, margin-bottom. Tracking and transform are applied at :where() specificity (0,1,0): f-text-uppercase / f-tracking-* on a button (0,2,0) still win, as in 1.3 when buttons did not set them. is-sm/lg/xl set the size row themselves (hooks ui-sm/lg/xl), so a Label size edit reaches default-size buttons only.
+   Not applied: measure, wrap, margin-top, margin-bottom. Tracking and transform are applied at :where() specificity (0,1,0): f-text-uppercase / f-tracking-* on a button (0,2,0) still win, as in 1.3 when buttons did not set them. is-sm/lg/xl set the size row themselves (hooks ui-sm/lg/xl), so a Label size edit reaches default-size buttons only.
    Cell edits that reach every member: [data-flwr] :is(.f-text-label, .flwr_button_primary, .flwr_button_secondary, .flwr_button_ghost, .flwr_button_alert, .flwr_button_link) { --_text-style---<row>: ...; } */
 [data-flwr] .flwr_button_primary,
 [data-flwr] .flwr_button_secondary,
@@ -4121,7 +4593,7 @@ body:has([data-flwr]) { margin: 0; }
   line-height:    var(--_text-style---leading);
   font-weight:    var(--_text-style---weight);
 }
-/* tracking, transform at specificity 0,1,0: a utility on the button (f-text-uppercase, f-tracking-*, 0,2,0) or a later
+/* tracking, transform at specificity 0,1,0: a utility on the element (f-text-uppercase, f-tracking-*, f-max-w-*, f-measure-none, 0,2,0) or a later
    project class still wins, as in 1.3 when buttons did not set them. A column-selector cell edit (0,2,0) wins too. */
 :where([data-flwr]) :is(.flwr_button_primary, .flwr_button_secondary, .flwr_button_ghost, .flwr_button_alert, .flwr_button_link) {
   --_text-style---tracking:      var(--_typography---tracking--normal);
@@ -4638,20 +5110,46 @@ body:has([data-flwr]) { margin: 0; }
   letter-spacing: var(--_typography---tracking--wider);
   color: var(--_theme---text--accent);
 }
+/* @generated text-styles:carrier:display begin — edit text-styles.json, then run build-text-styles.mjs */
+/* Member of the Display column (text-styles.json): declares and applies wrap; measure at :where() specificity (below).
+   Not applied: family, size, weight, leading, tracking, transform, margin-top, margin-bottom. Only wrap (text-wrap, applied in runtime.css) and measure (max-width at :where() specificity, so f-max-w-* / f-measure-none on the component still win) are taken from the column; the component keeps its own size, leading and colour.
+   Cell edits that reach every member: [data-flwr] :is(.f-text-display, .flwr_hero_headline) { --_text-style---<row>: ...; } */
+[data-flwr] .flwr_hero_headline {
+  --_text-style---wrap:          balance;
+}
+/* measure at specificity 0,1,0: a utility on the element (f-text-uppercase, f-tracking-*, f-max-w-*, f-measure-none, 0,2,0) or a later
+   project class still wins, as in 1.3 when buttons did not set them. A column-selector cell edit (0,2,0) wins too. */
+:where([data-flwr]) :is(.flwr_hero_headline) {
+  --_text-style---measure:       18ch;
+  max-width:      var(--_text-style---measure);
+}
+/* @generated text-styles:carrier:display end */
 [data-flwr] .flwr_hero_headline {
   font-size: var(--_typography---size--display);
   line-height: var(--_typography---leading--squashed);
   font-weight: var(--_typography---weight--bold);
   letter-spacing: var(--_typography---tracking--tighter);
-  text-wrap: balance;
   margin: 0;
 }
+/* @generated text-styles:carrier:lead begin — edit text-styles.json, then run build-text-styles.mjs */
+/* Member of the Lead column (text-styles.json): declares and applies wrap; measure at :where() specificity (below).
+   Not applied: family, size, weight, leading, tracking, transform, margin-top, margin-bottom. Only wrap (text-wrap, applied in runtime.css) and measure (max-width at :where() specificity, so f-max-w-* / f-measure-none on the component still win) are taken from the column; the component keeps its own size, leading and colour.
+   Cell edits that reach every member: [data-flwr] :is(.f-text-lead, .flwr_hero_subheadline, .flwr_testimonial_quote) { --_text-style---<row>: ...; } */
+[data-flwr] .flwr_hero_subheadline,
+[data-flwr] .flwr_testimonial_quote {
+  --_text-style---wrap:          balance;
+}
+/* measure at specificity 0,1,0: a utility on the element (f-text-uppercase, f-tracking-*, f-max-w-*, f-measure-none, 0,2,0) or a later
+   project class still wins, as in 1.3 when buttons did not set them. A column-selector cell edit (0,2,0) wins too. */
+:where([data-flwr]) :is(.flwr_hero_subheadline, .flwr_testimonial_quote) {
+  --_text-style---measure:       60ch;
+  max-width:      var(--_text-style---measure);
+}
+/* @generated text-styles:carrier:lead end */
 [data-flwr] .flwr_hero_subheadline {
   font-size: var(--_typography---size--lead);
   line-height: var(--_typography---leading--relaxed);
   color: var(--_section---text-muted);
-  max-width: 60ch;
-  text-wrap: pretty;
   margin: 0;
 }
 [data-flwr] .flwr_hero_visual {
@@ -4858,7 +5356,7 @@ body:has([data-flwr]) { margin: 0; }
 
 /* @generated text-styles:carrier:eyebrow begin — edit text-styles.json, then run build-text-styles.mjs */
 /* Member of the Eyebrow column (text-styles.json): declares and applies size, weight, tracking, transform.
-   Not applied yet (planned for 1.5): family, leading, wrap, margin-top, margin-bottom. flwr_eyebrow never set line-height or font-family in 1.3 (it inherits them); applying the Eyebrow leading (1.2) or family would change every eyebrow. Affects 11 Van Alva eyebrows.
+   Not applied: family, leading, measure, wrap, margin-top, margin-bottom. flwr_eyebrow never set line-height or font-family in 1.3 (it inherits them); applying the Eyebrow leading (1.2) or family would change every eyebrow. Affects 11 Van Alva eyebrows.
    Cell edits that reach every member: [data-flwr] :is(.f-text-eyebrow, .flwr_eyebrow) { --_text-style---<row>: ...; } */
 [data-flwr] .flwr_eyebrow {
   --_text-style---size:          var(--_typography---size--tiny);
@@ -5415,7 +5913,7 @@ body:has([data-flwr]) { margin: 0; }
   border: 1px solid var(--_section---border-subtle);
   border-radius: var(--_radius---xl);
 }
-[data-flwr] .flwr_testimonial_quote { font-size: var(--_typography---size--lead); line-height: var(--_typography---leading--relaxed); color: var(--_section---text); font-style: italic; margin: 0; text-wrap: pretty; }
+[data-flwr] .flwr_testimonial_quote { font-size: var(--_typography---size--lead); line-height: var(--_typography---leading--relaxed); color: var(--_section---text); font-style: italic; margin: 0; }
 [data-flwr] .flwr_testimonial_quote::before { content: "\201C"; color: var(--_theme---accent--main); font-size: 2em; line-height: 0; vertical-align: -0.4em; margin-inline-end: 0.1em; } /* v1.1: theme accent (was raw core--500) */
 [data-flwr] .flwr_testimonial_author { display: flex; align-items: center; gap: var(--_spacing---step--3); margin-block-start: auto; }
 [data-flwr] .flwr_testimonial_author_meta { display: flex; flex-direction: column; }
@@ -5452,7 +5950,21 @@ body:has([data-flwr]) { margin: 0; }
 [data-flwr] .flwr_blog_card_media img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms var(--_motion---ease-emphasized); }
 [data-flwr] .flwr_blog_card_wrap:hover .flwr_blog_card_media img { transform: scale(1.04); }
 [data-flwr] .flwr_blog_card_meta  { display: flex; gap: var(--_spacing---step--3); font-size: var(--_typography---size--small); color: var(--_section---text-muted); align-items: center; }
-[data-flwr] .flwr_blog_card_title { font-size: var(--_typography---size--h5); line-height: var(--_typography---leading--snug); font-weight: var(--_typography---weight--semibold); color: var(--_section---text-strong); margin: 0; text-wrap: balance; }
+/* @generated text-styles:carrier:h5 begin — edit text-styles.json, then run build-text-styles.mjs */
+/* Member of the H5 column (text-styles.json): declares and applies wrap; measure at :where() specificity (below).
+   Not applied: family, size, weight, leading, tracking, transform, margin-top, margin-bottom. Only wrap (text-wrap, applied in runtime.css) and measure (max-width at :where() specificity, so f-max-w-* / f-measure-none on the component still win) are taken from the column; the component keeps its own size, leading and colour.
+   Cell edits that reach every member: [data-flwr] :is(.f-text-h5, .flwr_blog_card_title) { --_text-style---<row>: ...; } */
+[data-flwr] .flwr_blog_card_title {
+  --_text-style---wrap:          balance;
+}
+/* measure at specificity 0,1,0: a utility on the element (f-text-uppercase, f-tracking-*, f-max-w-*, f-measure-none, 0,2,0) or a later
+   project class still wins, as in 1.3 when buttons did not set them. A column-selector cell edit (0,2,0) wins too. */
+:where([data-flwr]) :is(.flwr_blog_card_title) {
+  --_text-style---measure:       none;
+  max-width:      var(--_text-style---measure);
+}
+/* @generated text-styles:carrier:h5 end */
+[data-flwr] .flwr_blog_card_title { font-size: var(--_typography---size--h5); line-height: var(--_typography---leading--snug); font-weight: var(--_typography---weight--semibold); color: var(--_section---text-strong); margin: 0; }
 [data-flwr] .flwr_blog_card_excerpt { font-size: var(--_typography---size--body); line-height: var(--_typography---leading--relaxed); color: var(--_section---text-muted); margin: 0; }
 
 
