@@ -23,12 +23,11 @@
   <link rel="preload" href="assets/fonts/Nugros-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/Nugros-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fonts.css?v=d00f1644">
-  <link rel="stylesheet" href="css/framework.css?v=1a765f0c">
-  <link rel="stylesheet" href="css/variables.css?v=402f79dd">
-  <link rel="stylesheet" href="css/project.css?v=ae2f63d7">
-  <link rel="stylesheet" href="css/tpl-documento.css?v=62f60489">
-  <!-- Swiper.js — required by the flwr marquee engine used by the FX ticker. -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
+  <link rel="stylesheet" href="css/framework.css?v=394e4ff9">
+  <link rel="stylesheet" href="css/variables.css?v=69f4118a">
+  <link rel="stylesheet" href="css/project.css?v=92b5aac0">
+  <link rel="stylesheet" href="css/tpl-documento.css?v=e3e6d6d8">
+  <script src="assets/n58-dialogs.js?v=88678ca5"></script>
 </head>
 <body>
 <div data-flwr class="f-mode-light n58-page">
@@ -46,7 +45,7 @@
   <noscript><style>.n58-preloader { display: none; }</style></noscript>
   <script>document.querySelector('[data-flwr]').classList.add('is-booting');</script>
 
-  <a href="#main-content" class="u-sr-only">Saltar al contenido</a>
+  <a href="#main-content" class="f-sr-only">Saltar al contenido</a>
 
   <!-- ════════════════ NAVBAR (shared) ════════════════ -->
   <nav class="flwr_navbar_wrap is-fixed f-mode-dark" data-flwr="navbar" data-flwr-navbar-trigger="hover" data-flwr-navbar-scroll="auto-hide" aria-label="Principal">
@@ -57,53 +56,54 @@
       <ul class="flwr_navbar_menu" role="list">
         <li class="flwr_navbar_dropdown">
           <button type="button" class="flwr_navbar_dropdown_trigger flwr_navbar_link" aria-expanded="false" aria-haspopup="true">Empresas</button>
-          <ul class="flwr_navbar_dropdown_menu" role="list">
-            <li class="flwr_navbar_dropdown_sub">
-              <a href="productos-empresas.html#cuentas" class="flwr_navbar_dropdown_item flwr_navbar_dropdown_subtrigger">Cuentas<svg class="flwr_navbar_dropdown_caret" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <ul class="flwr_navbar_dropdown_menu n58-dd_menu--has-sub" role="list">
+            <li class="flwr_navbar_dropdown_sub n58-dd_li n58-dd_li--1">
+              <a href="productos-empresas.html#cuentas" class="flwr_navbar_dropdown_item flwr_navbar_dropdown_subtrigger n58-dd_item--first">Cuentas<svg class="flwr_navbar_dropdown_caret" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
               <ul class="flwr_navbar_dropdown_submenu" role="list">
-                <li><a href="cuenta-corriente-empresas.html" class="flwr_navbar_dropdown_item">Cuenta Corriente</a></li>
-                <li><a href="cuenta-moneda-extranjera-empresas.html" class="flwr_navbar_dropdown_item">Cuenta en Moneda Extranjera</a></li>
+                <li class="n58-dd_subli n58-dd_subli--1"><a href="cuenta-corriente-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--first">Cuenta Corriente</a></li>
+                <li class="n58-dd_subli n58-dd_subli--2"><a href="cuenta-moneda-extranjera-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--last">Cuenta en Moneda Extranjera</a></li>
               </ul>
             </li>
-            <li class="flwr_navbar_dropdown_sub">
+            <li class="flwr_navbar_dropdown_sub n58-dd_li n58-dd_li--2">
               <a href="pago-movil-empresas.html" class="flwr_navbar_dropdown_item flwr_navbar_dropdown_subtrigger">Pago Móvil<svg class="flwr_navbar_dropdown_caret" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
               <ul class="flwr_navbar_dropdown_submenu" role="list">
-                <li><a href="pago-movil-empresas.html" class="flwr_navbar_dropdown_item">Pago Móvil</a></li>
+                <li class="n58-dd_subli n58-dd_subli--1"><a href="pago-movil-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--first n58-dd_item--last">Pago Móvil</a></li>
               </ul>
             </li>
-            <li class="flwr_navbar_dropdown_sub">
+            <li class="flwr_navbar_dropdown_sub n58-dd_li n58-dd_li--3">
               <a href="pago-de-servicios-empresas.html" class="flwr_navbar_dropdown_item flwr_navbar_dropdown_subtrigger">Pago de Servicios<svg class="flwr_navbar_dropdown_caret" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
               <ul class="flwr_navbar_dropdown_submenu" role="list">
-                <li><a href="pago-de-servicios-empresas.html" class="flwr_navbar_dropdown_item">Pago de Servicios</a></li>
+                <li class="n58-dd_subli n58-dd_subli--1"><a href="pago-de-servicios-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--first n58-dd_item--last">Pago de Servicios</a></li>
               </ul>
             </li>
-            <li class="flwr_navbar_dropdown_sub">
+            <li class="flwr_navbar_dropdown_sub n58-dd_li n58-dd_li--4">
               <a href="intervencion-cambiaria-empresas.html" class="flwr_navbar_dropdown_item flwr_navbar_dropdown_subtrigger">Operaciones Cambiarias<svg class="flwr_navbar_dropdown_caret" viewBox="0 0 8 12" fill="none" aria-hidden="true"><path d="M1.5 1.5 6 6l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
               <ul class="flwr_navbar_dropdown_submenu" role="list">
-                <li><a href="intervencion-cambiaria-empresas.html" class="flwr_navbar_dropdown_item">Intervención</a></li>
+                <li class="n58-dd_subli n58-dd_subli--1"><a href="intervencion-cambiaria-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--first n58-dd_item--last">Intervención</a></li>
               </ul>
             </li>
-            <li><a href="productos-empresas.html#productos-inversiones" class="flwr_navbar_dropdown_item">Productos e Inversiones</a></li>
-            <li><a href="productos-empresas.html" class="flwr_navbar_dropdown_item">Ver todos los productos</a></li>
+            <li class="n58-dd_li n58-dd_li--6"><a href="productos-empresas.html#productos-inversiones" class="flwr_navbar_dropdown_item">Productos e Inversiones</a></li>
+            <li class="n58-dd_li n58-dd_li--7" data-n58-feature="n-emprende"><a href="n-emprende-empresas.html" class="flwr_navbar_dropdown_item">N Emprende</a></li>
+            <li class="n58-dd_li n58-dd_li--9"><a href="productos-empresas.html" class="flwr_navbar_dropdown_item n58-dd_item--last">Ver todos los productos</a></li>
           </ul>
         </li>
         <li class="flwr_navbar_dropdown">
           <button type="button" class="flwr_navbar_dropdown_trigger flwr_navbar_link" aria-expanded="false" aria-haspopup="true">Recursos</button>
           <ul class="flwr_navbar_dropdown_menu" role="list">
-            <li><a href="blog.html" class="flwr_navbar_dropdown_item">Blog</a></li>
-            <li><a href="boletines.html" class="flwr_navbar_dropdown_item">Boletines</a></li>
-            <li><a href="documentos-legales.html" class="flwr_navbar_dropdown_item">Documentos legales</a></li>
-            <li><a href="informes-financieros.html" class="flwr_navbar_dropdown_item">Informes financieros</a></li>
-            <li><a href="limites-diarios.html" class="flwr_navbar_dropdown_item">Límites diarios</a></li>
-            <li><a href="preguntas-frecuentes.html" class="flwr_navbar_dropdown_item">Preguntas frecuentes</a></li>
-            <li><a href="atencion-al-cliente.html" class="flwr_navbar_dropdown_item">Atención al cliente</a></li>
+            <li class="n58-dd_li n58-dd_li--1"><a href="blog.html" class="flwr_navbar_dropdown_item n58-dd_item--first">Blog</a></li>
+            <li class="n58-dd_li n58-dd_li--2"><a href="boletines.html" class="flwr_navbar_dropdown_item">Boletines</a></li>
+            <li class="n58-dd_li n58-dd_li--3"><a href="documentos-legales.html" class="flwr_navbar_dropdown_item">Documentos legales</a></li>
+            <li class="n58-dd_li n58-dd_li--4"><a href="informes-financieros.html" class="flwr_navbar_dropdown_item">Informes financieros</a></li>
+            <li class="n58-dd_li n58-dd_li--5"><a href="limites-diarios.html" class="flwr_navbar_dropdown_item">Límites diarios</a></li>
+            <li class="n58-dd_li n58-dd_li--6"><a href="preguntas-frecuentes.html" class="flwr_navbar_dropdown_item">Preguntas frecuentes</a></li>
+            <li class="n58-dd_li n58-dd_li--7"><a href="atencion-al-cliente.html" class="flwr_navbar_dropdown_item n58-dd_item--last">Atención al cliente</a></li>
           </ul>
         </li>
         <li><a href="conocenos.html" class="flwr_navbar_link">Conócenos</a></li>
       </ul>
       <div class="flwr_navbar_actions">
-        <a href="https://online.n58bancodigital.com" class="flwr_button_secondary" data-flwr-trigger="hover focus"><span data-flwr-target="label">Banca en línea</span></a>
-        <a href="productos-empresas.html" class="flwr_button_primary" data-flwr-trigger="hover focus"><span data-flwr-target="label">Abre tu cuenta</span></a>
+        <a href="https://online.n58bancodigital.com" target="_blank" rel="noopener" class="flwr_button_secondary n58-nav_cta" data-flwr-trigger="hover focus"><span data-flwr-target="label">Banca en línea</span></a>
+        <a href="productos-empresas.html" class="flwr_button_primary n58-nav_cta" data-flwr-trigger="hover focus"><span data-flwr-target="label">Abre tu cuenta</span></a>
       </div>
       <button type="button" class="flwr_navbar_hamburger n58-hamburger" aria-label="Abrir menú" aria-expanded="false" data-flwr-target="fullscreen-menu-trigger" data-flwr-menu-id="n58-menu">
         <span class="n58-hamburger_icon" aria-hidden="true">
@@ -122,83 +122,35 @@
   <div class="n58-scroll-progress" aria-hidden="true"></div>
 
   <!-- ════════════════ MOBILE FULLSCREEN MENU (flwr fullscreen-menu) ════════════════ -->
-  <dialog id="n58-menu" class="flwr_fullscreen_menu_wrap n58-fsmenu" data-flwr="fullscreen-menu" tabindex="-1" aria-label="Menú principal">
-    <!-- Logo + close are pinned to the EXACT navbar logo/hamburger positions so
-         nothing jumps when the menu opens (the hamburger morphs to X in place). -->
-    <div class="n58-fsmenu-logo n58-lottie-logo" data-n58-lottie="assets/n58-logo-lottie.json" role="img" aria-label="N58 Banco Digital"></div>
-    <button type="button" class="flwr_fullscreen_menu_close n58-menu-close" data-flwr-target="close" aria-label="Cerrar menú">
+  <dialog id="n58-menu" class="flwr_fullscreen_menu_wrap n58-fsmenu f-mode-dark" data-flwr="fullscreen-menu" tabindex="-1" aria-label="Menú principal">
+    <div class="flwr_fullscreen_menu_content n58-fsmenu_content">
+      <div class="n58-fsmenu_scroller" data-n58-menu-scroller>
+        <div class="n58-fsmenu_scrollbody">
+          <span class="n58-fsmenu_snap n58-fsmenu_snap--closed" aria-hidden="true"></span><span class="n58-fsmenu_snap n58-fsmenu_snap--default" aria-hidden="true"></span><span class="n58-fsmenu_snap n58-fsmenu_snap--full" aria-hidden="true"></span><span class="n58-fsmenu_snap n58-fsmenu_snap--end" aria-hidden="true"></span>
+          <div class="n58-fsmenu_spacer" aria-hidden="true"></div>
+          <div class="n58-fsmenu_sheet">
+            <button type="button" class="n58-fsmenu_handle" aria-expanded="false" aria-label="Expandir menú" data-n58-sheet-handle><span class="n58-fsmenu_handle_bar" aria-hidden="true"></span></button>
+        <div class="n58-fsmenu_head">
+          <span class="n58-fsmenu_title f-text-eyebrow">Menú</span>
+          <button type="button" class="flwr_fullscreen_menu_close n58-menu-close" data-flwr-target="close" aria-label="Cerrar menú">
       <span class="n58-menu-close_icon" aria-hidden="true">
         <img src="assets/images/icons/menu-bar-cream.svg" alt="" class="n58-menu-close_bar n58-menu-close_bar--1">
         <img src="assets/images/icons/menu-bar-cream.svg" alt="" class="n58-menu-close_bar n58-menu-close_bar--2">
       </span>
     </button>
-    <div class="flwr_fullscreen_menu_content">
-      <span class="n58-fsmenu-headroom" aria-hidden="true"></span>
-      <nav class="flwr_fullscreen_menu_links" aria-label="Menú">
-        <div class="n58-fsmenu-group" data-flwr="collapse">
-          <button type="button" class="flwr_fullscreen_menu_link n58-fsmenu-trigger" data-flwr-target="trigger" aria-expanded="false">
-            <span>Empresas</span>
-            <svg class="n58-fsmenu-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="n58-fsmenu-subwrap">
-            <div class="n58-fsmenu-sublist">
-              <div class="n58-fsmenu-sublinks">
-                <a href="productos-empresas.html#cuentas" class="n58-fsmenu-sublink">Cuentas</a>
-                <a href="pago-movil-empresas.html" class="n58-fsmenu-sublink">Pago Móvil</a>
-                <a href="pago-de-servicios-empresas.html" class="n58-fsmenu-sublink">Pago de Servicios</a>
-                <a href="intervencion-cambiaria-empresas.html" class="n58-fsmenu-sublink">Operaciones Cambiarias</a>
-                <a href="productos-empresas.html#productos-inversiones" class="n58-fsmenu-sublink">Productos e Inversiones</a>
-                <a href="productos-empresas.html" class="n58-fsmenu-sublink">Ver todos los productos</a>
-              </div>
-            </div>
-          </div>
         </div>
-        <div class="n58-fsmenu-group" data-flwr="collapse">
-          <button type="button" class="flwr_fullscreen_menu_link n58-fsmenu-trigger" data-flwr-target="trigger" aria-expanded="false">
-            <span>Recursos</span>
-            <svg class="n58-fsmenu-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="n58-fsmenu-subwrap">
-            <div class="n58-fsmenu-sublist">
-              <div class="n58-fsmenu-sublinks">
-                <a href="blog.html" class="n58-fsmenu-sublink">Blog</a>
-                <a href="boletines.html" class="n58-fsmenu-sublink">Boletines</a>
-                <a href="documentos-legales.html" class="n58-fsmenu-sublink">Documentos legales</a>
-                <a href="informes-financieros.html" class="n58-fsmenu-sublink">Informes financieros</a>
-                <a href="limites-diarios.html" class="n58-fsmenu-sublink">Límites diarios</a>
-                <a href="preguntas-frecuentes.html" class="n58-fsmenu-sublink">Preguntas frecuentes</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="n58-fsmenu-group">
-          <a href="conocenos.html" class="flwr_fullscreen_menu_link">Conócenos</a>
-        </div>
-        <div class="n58-fsmenu-group" data-flwr="collapse">
-          <button type="button" class="flwr_fullscreen_menu_link n58-fsmenu-trigger" data-flwr-target="trigger" aria-expanded="false">
-            <span>Atención al Cliente</span>
-            <svg class="n58-fsmenu-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="n58-fsmenu-subwrap">
-            <div class="n58-fsmenu-sublist">
-              <div class="n58-fsmenu-sublinks">
-                <a href="preguntas-frecuentes.html" class="n58-fsmenu-sublink">Preguntas Frecuentes</a>
-                <a href="atencion-al-cliente.html" class="n58-fsmenu-sublink">Contáctanos</a>
-                <a href="formulario-reclamos.html" class="n58-fsmenu-sublink">Reclamos</a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <nav class="flwr_fullscreen_menu_links n58-fsmenu_links" aria-label="Menú">
+        <div class="n58-fsmenu_card n58-notch-border" data-flwr="collapse"><button type="button" class="n58-fsmenu_row f-text-h5 f-text-semibold" data-flwr-target="trigger" aria-expanded="false" aria-controls="n58-menu-sub-empresas"><span class="n58-fsmenu_num f-text-eyebrow" aria-hidden="true"></span><span class="n58-fsmenu_label">Empresas</span><span class="n58-fsmenu_chev" aria-hidden="true"></span></button><div class="n58-fsmenu_sub" id="n58-menu-sub-empresas"><div class="n58-fsmenu_subin"><div class="n58-fsmenu_sublinks"><a href="productos-empresas.html#cuentas" class="flwr_chip n58-fsmenu_chip">Cuentas</a><a href="pago-movil-empresas.html" class="flwr_chip n58-fsmenu_chip">Pago Móvil</a><a href="pago-de-servicios-empresas.html" class="flwr_chip n58-fsmenu_chip">Pago de Servicios</a><a href="intervencion-cambiaria-empresas.html" class="flwr_chip n58-fsmenu_chip">Operaciones Cambiarias</a><a href="productos-empresas.html#productos-inversiones" class="flwr_chip n58-fsmenu_chip">Productos e Inversiones</a><a href="n-emprende-empresas.html" class="flwr_chip n58-fsmenu_chip" data-n58-feature="n-emprende">N Emprende</a><a href="productos-empresas.html" class="flwr_chip n58-fsmenu_chip">Ver todos los productos</a></div></div></div></div>
+        <div class="n58-fsmenu_card n58-notch-border" data-flwr="collapse"><button type="button" class="n58-fsmenu_row f-text-h5 f-text-semibold" data-flwr-target="trigger" aria-expanded="false" aria-controls="n58-menu-sub-recursos"><span class="n58-fsmenu_num f-text-eyebrow" aria-hidden="true"></span><span class="n58-fsmenu_label">Recursos</span><span class="n58-fsmenu_chev" aria-hidden="true"></span></button><div class="n58-fsmenu_sub" id="n58-menu-sub-recursos"><div class="n58-fsmenu_subin"><div class="n58-fsmenu_sublinks"><a href="blog.html" class="flwr_chip n58-fsmenu_chip">Blog</a><a href="boletines.html" class="flwr_chip n58-fsmenu_chip">Boletines</a><a href="documentos-legales.html" class="flwr_chip n58-fsmenu_chip">Documentos legales</a><a href="informes-financieros.html" class="flwr_chip n58-fsmenu_chip">Informes financieros</a><a href="limites-diarios.html" class="flwr_chip n58-fsmenu_chip">Límites diarios</a></div></div></div></div>
+        <div class="n58-fsmenu_card n58-notch-border"><a href="conocenos.html" class="n58-fsmenu_row f-text-h5 f-text-semibold"><span class="n58-fsmenu_num f-text-eyebrow" aria-hidden="true"></span><span class="n58-fsmenu_label">Conócenos</span><span class="n58-fsmenu_chev n58-fsmenu_chev--go" aria-hidden="true"></span></a></div>
+        <div class="n58-fsmenu_card n58-notch-border" data-flwr="collapse"><button type="button" class="n58-fsmenu_row f-text-h5 f-text-semibold" data-flwr-target="trigger" aria-expanded="false" aria-controls="n58-menu-sub-atencion"><span class="n58-fsmenu_num f-text-eyebrow" aria-hidden="true"></span><span class="n58-fsmenu_label">Atención</span><span class="n58-fsmenu_chev" aria-hidden="true"></span></button><div class="n58-fsmenu_sub" id="n58-menu-sub-atencion"><div class="n58-fsmenu_subin"><div class="n58-fsmenu_sublinks"><a href="preguntas-frecuentes.html" class="flwr_chip n58-fsmenu_chip">Preguntas Frecuentes</a><a href="atencion-al-cliente.html" class="flwr_chip n58-fsmenu_chip">Contáctanos</a><a href="formulario-reclamos.html" class="flwr_chip n58-fsmenu_chip">Reclamos</a></div></div></div></div>
       </nav>
-      <div class="flwr_fullscreen_menu_footer">
-        <div class="n58-fsmenu-ctas">
-          <a href="https://online.n58bancodigital.com" class="flwr_button_secondary"><span data-flwr-target="label">Banca en línea</span></a>
-          <a href="productos-empresas.html" class="flwr_button_primary"><span data-flwr-target="label">Abre tu cuenta</span></a>
+          </div>
         </div>
-        <div class="flwr_fullscreen_menu_socials">
-          <a href="tel:+582129177299" class="flwr_fullscreen_menu_social" aria-label="Llamar a Línea N58"><img src="assets/images/icons/phone-cream.svg" alt=""></a>
-          <a href="mailto:atencionalcliente@n58bancodigital.com" class="flwr_fullscreen_menu_social" aria-label="Escríbenos"><img src="assets/images/icons/mail-cream.svg" alt=""></a>
-        </div>
+      </div>
+      <div class="n58-fsmenu_foot">
+        <div class="n58-fsmenu_ctas"><a href="https://online.n58bancodigital.com" target="_blank" rel="noopener" class="flwr_button_secondary n58-fsmenu_cta"><span data-flwr-target="label">Banca en línea</span></a><a href="productos-empresas.html" class="flwr_button_primary n58-fsmenu_cta"><span data-flwr-target="label">Abre tu cuenta</span></a></div>
+        <div class="n58-fsmenu_contact"><div class="n58-fsmenu_contact-links"><a href="tel:+582129177299" class="n58-fsmenu_contact-link f-text-small f-text-medium">Línea N58</a><a href="https://wa.me/584142816245?text=Buenas!%20Vengo%20de%20la%20web%20de%20N58%20y%20me%20gustar%C3%ADa%20obtener%20m%C3%A1s%20informaci%C3%B3n%20." target="_blank" rel="noopener" class="n58-fsmenu_contact-link f-text-small f-text-medium">WhatsApp</a></div><p class="f-text-tiny n58-footer-bottom_text n58-fsmenu_credit">Made with <span class="n58-footer-heart" aria-label="love" role="img">♥</span> by <a href="https://bruta.studio" target="_blank" rel="noopener" class="n58-footer-bottom_link">Bruta Studio</a></p></div>
       </div>
     </div>
   </dialog>
@@ -251,10 +203,10 @@
       <div class="n58-container">
         <div class="home-split">
           <div class="tpl-doc-hero_inner n58-reveal-stack">
-          <p class="f-text-small"><span class="n58-badge is-core f-text-color-strong">Documento legal</span></p>
-          <h1 class="f-text-display f-text-color-strong tpl-doc-hero_title">Políticas de Privacidad</h1>
-          <p class="f-text-lead f-text-color-muted tpl-doc-hero_desc">En N58 Banco Digital, la protección de tu información personal es fundamental. Nuestras políticas de privacidad están diseñadas para garantizar la confidencialidad, integridad y uso responsable de tus datos. Conoce cómo recopilamos, almacenamos y utilizamos tu información, siempre cumpliendo con la normativa vigente y con el compromiso de ofrecerte una experiencia segura y transparente.</p>
-          <div class="tpl-doc-hero_actions">
+          <p class="f-text-small n58-reveal-stack_item tpl-doc-hero_item"><span class="n58-badge is-core f-text-color-strong">Documento legal</span></p>
+          <h1 class="f-text-display f-text-color-strong tpl-doc-hero_title n58-reveal-stack_item n58-reveal-stack_item--2 tpl-doc-hero_item tpl-doc-hero_item--2">Políticas de Privacidad</h1>
+          <p class="f-text-lead f-text-color-muted tpl-doc-hero_desc n58-reveal-stack_item n58-reveal-stack_item--3 tpl-doc-hero_item tpl-doc-hero_item--3">En N58 Banco Digital, la protección de tu información personal es fundamental. Nuestras políticas de privacidad están diseñadas para garantizar la confidencialidad, integridad y uso responsable de tus datos. Conoce cómo recopilamos, almacenamos y utilizamos tu información, siempre cumpliendo con la normativa vigente y con el compromiso de ofrecerte una experiencia segura y transparente.</p>
+          <div class="tpl-doc-hero_actions n58-reveal-stack_item n58-reveal-stack_item--4 tpl-doc-hero_item tpl-doc-hero_item--4">
             <!-- BUILD:ACTIONS — generated by audit/parity-2026-08-26/tools/build_doc_pages.py -->
             <a href="#document-content" class="flwr_button_secondary" data-flwr-trigger="hover focus"><span data-flwr-target="label">Leer más</span></a>
             <a href="assets/docs/legal/politicas-de-privacidad.pdf" target="_blank" rel="noopener" class="flwr_button_primary" data-flwr-trigger="hover focus">
@@ -269,8 +221,8 @@
                  legacy document page ran, and the same one the Documentos Legales
                  index uses. Poster is the folder render, shown until the scene
                  hydrates (desktop only; mobile keeps the poster). -->
-            <div class="n58-spline" data-n58-spline="https://prod.spline.design/9ofoOPWZ6geExqMm/scene.splinecode">
-              <img src="assets/images/photos/n58-folder-fallback.webp" alt="Carpeta de documentos N58" class="n58-spline_poster" loading="eager" decoding="async">
+            <div class="n58-spline tpl-doc-hero_spline" data-n58-spline="https://prod.spline.design/9ofoOPWZ6geExqMm/scene.splinecode">
+              <img src="assets/images/photos/n58-folder-fallback.webp" alt="Carpeta de documentos N58" class="n58-spline_poster is-folder" loading="eager" decoding="async">
             </div>
           </div>
         </div>
@@ -280,13 +232,13 @@
     <!-- ════════════════ 02 · BODY — TOC rail + rich-text article [light] ════════════════ -->
     <section class="f-section-lg tpl-doc-bodysection" id="document-content" aria-label="Contenido del documento">
       <div class="n58-container">
-        <div class="tpl-doc-layout">
+        <div class="tpl-doc-layout is-toc-sidebar">
 
           <!-- Table of contents (single markup; the is-toc-* variant repositions it).
                Rebuilt per document from that document's own headings. -->
           <!-- BUILD:TOC — generated by audit/parity-2026-08-26/tools/build_doc_pages.py -->
-          <details class="tpl-doc-toc n58-reveal" open>
-            <summary class="tpl-doc-toc_summary">
+          <details class="tpl-doc-toc n58-reveal is-toc-sidebar" open>
+            <summary class="tpl-doc-toc_summary is-toc-sidebar">
               <span class="tpl-doc-toc_title">En este documento</span>
               <svg class="tpl-doc-toc_chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </summary>
@@ -307,51 +259,51 @@
                ELEMENT, and a legal document is thousands of pixels tall, so
                "cover 36%" meant the copy stayed mid-animation for several
                screens of scrolling. The TOC above still reveals — it is short. -->
-          <article class="tpl-doc-prose">
+          <article class="tpl-doc-prose is-toc-sidebar">
             <!-- BUILD:BODY — generated by audit/parity-2026-08-26/tools/build_doc_pages.py -->
-            <h2>POLÍTICAS DE PRIVACIDAD</h2>
-            <p>Para N58 Banco Digital, Banco Microfinanciero, S.A., la seguridad y privacidad de tus datos son prioridad. Por ello, hemos tomado las precauciones y adecuado los sistemas necesarios para garantizar la confidencialidad y protección de toda la información que tú nos facilitas. Con nuestra Política de Privacidad, tú como nuestro cliente puedes conocer de qué manera realizamos el resguardo y tratamiento de tus datos.</p>
-            <p>Somos responsables del tratamiento de tu información, extendida a nuestros contratistas y demás personas naturales y jurídicas que, por la naturaleza de sus labores, deban conocerla.</p>
-            <h3 id="doc-cookies">¿Cookies?</h3>
-            <p>Las cookies son un texto breve, alfanumérico, que se almacena en el terminal del usuario que accede a un sitio web, y que puede usarse para diversas finalidades. Nuestro portal web y móvil utiliza cookies para facilitarte y hacerte más segura la navegación. Además, sirve para recopilar estadísticas sobre la navegación realizada, y conocer más a nuestros clientes y sus preferencias.</p>
-            <h3 id="doc-acerca-de-las-cookies-en-uso">Acerca de las cookies en uso</h3>
-            <p>En nuestro sitio web se usan cookies a efecto de realizar las comunicaciones inherentes a la navegación electrónica. También con el objeto de prestar o habilitar los servicios o funcionalidades solicitados por ti como nuestro cliente.</p>
-            <p>Las cookies:</p>
-            <ul>
-              <li>Incrementan la seguridad de tu navegación en nuestro sitio web.</li>
-              <li>Permiten que prevalezca la preferencia de idioma seleccionado.</li>
-              <li>Hacen que la navegación la realices de forma expedita.</li>
-              <li>Proporcionan una adecuada reproducción de contenidos multimedia.</li>
+            <h2 class="tpl-doc_block tpl-doc_h2">POLÍTICAS DE PRIVACIDAD</h2>
+            <p class="tpl-doc_block tpl-doc_p">Para N58 Banco Digital, Banco Microfinanciero, S.A., la seguridad y privacidad de tus datos son prioridad. Por ello, hemos tomado las precauciones y adecuado los sistemas necesarios para garantizar la confidencialidad y protección de toda la información que tú nos facilitas. Con nuestra Política de Privacidad, tú como nuestro cliente puedes conocer de qué manera realizamos el resguardo y tratamiento de tus datos.</p>
+            <p class="tpl-doc_block tpl-doc_p">Somos responsables del tratamiento de tu información, extendida a nuestros contratistas y demás personas naturales y jurídicas que, por la naturaleza de sus labores, deban conocerla.</p>
+            <h3 class="tpl-doc_block tpl-doc_h3" id="doc-cookies">¿Cookies?</h3>
+            <p class="tpl-doc_block tpl-doc_p">Las cookies son un texto breve, alfanumérico, que se almacena en el terminal del usuario que accede a un sitio web, y que puede usarse para diversas finalidades. Nuestro portal web y móvil utiliza cookies para facilitarte y hacerte más segura la navegación. Además, sirve para recopilar estadísticas sobre la navegación realizada, y conocer más a nuestros clientes y sus preferencias.</p>
+            <h3 class="tpl-doc_block tpl-doc_h3" id="doc-acerca-de-las-cookies-en-uso">Acerca de las cookies en uso</h3>
+            <p class="tpl-doc_block tpl-doc_p">En nuestro sitio web se usan cookies a efecto de realizar las comunicaciones inherentes a la navegación electrónica. También con el objeto de prestar o habilitar los servicios o funcionalidades solicitados por ti como nuestro cliente.</p>
+            <p class="tpl-doc_block tpl-doc_p">Las cookies:</p>
+            <ul class="tpl-doc_block tpl-doc_list tpl-doc_ul">
+              <li class="tpl-doc_li tpl-doc_li-ul">Incrementan la seguridad de tu navegación en nuestro sitio web.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Permiten que prevalezca la preferencia de idioma seleccionado.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Hacen que la navegación la realices de forma expedita.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Proporcionan una adecuada reproducción de contenidos multimedia.</li>
             </ul>
-            <p>Nuestro sitio web utiliza también cookies propias para recopilar información sobre la navegación de tu usuario en el sitio, siempre de manera anónima y disociada, mejorando la utilidad y solo con fines estadísticos, esto nos permite:</p>
-            <ul>
-              <li>Saber el flujo de la actividad en el portal.</li>
-              <li>Identificar problemas y mejoras en la navegación.</li>
-              <li>Conocer el número de usuarios y/o visitantes del portal de N58 Banco Digital.</li>
-              <li>Control de visitas en cada una de las diferentes páginas de este portal.</li>
+            <p class="tpl-doc_block tpl-doc_p">Nuestro sitio web utiliza también cookies propias para recopilar información sobre la navegación de tu usuario en el sitio, siempre de manera anónima y disociada, mejorando la utilidad y solo con fines estadísticos, esto nos permite:</p>
+            <ul class="tpl-doc_block tpl-doc_list tpl-doc_ul">
+              <li class="tpl-doc_li tpl-doc_li-ul">Saber el flujo de la actividad en el portal.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Identificar problemas y mejoras en la navegación.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Conocer el número de usuarios y/o visitantes del portal de N58 Banco Digital.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Control de visitas en cada una de las diferentes páginas de este portal.</li>
             </ul>
-            <h3 id="doc-nuestras-politicas-sobre-cookies">Nuestras políticas sobre cookies</h3>
-            <p>Debes saber que nuestro portal web y móvil cuenta con cookies, estas corresponden a pequeños ficheros que se almacenan en el terminal de los usuarios o clientes. También permiten a nuestros sistemas tener a la vista características o preferencias de la navegación en nuestro portal web o móvil, con la finalidad de personalizar tu acceso en sucesivas visitas, de manera más segura y recabar información estadística sobre la navegación efectuada, o conocer preferencias de los clientes y usuarios.</p>
-            <p>Siempre en cumplimiento a la normativa vigente, nuestra política de cookies se basa en el tratamiento de los datos personales y la protección de la intimidad en el ámbito de las comunicaciones electrónicas. N58 Banco Digital, Banco Microfinanciero, S.A., te solicitará consentimiento, cuando sea necesario, para el uso de las mismas, e informará de las cookies que utiliza en la página web y móvil.</p>
-            <h3 id="doc-sobre-tu-informacion">Sobre tu información:</h3>
-            <p>N58 Banco Digital, Banco Microfinanciero, S.A., en cumplimiento a la normativa vigente, te solicita y almacena información personal que abarca varias premisas, tales como: profesional, económica, crediticia, biométrica y cualquier otro dato que mantengamos en nuestros registros que nos permita identificarte. Conocer a nuestros clientes asegura la continuidad y mejora de nuestros servicios. Asimismo, podremos generar continuamente medidas de seguridad.</p>
-            <p>Al momento en que accedes a nuestro portal web, automáticamente podremos obtener lo siguiente:</p>
-            <ul>
-              <li>Tu geolocalización digital, con lo que reforzamos procesos de prevención de fraudes o la identificación de oportunidades para ofrecerte servicios adaptados a tus requerimientos.</li>
-              <li>Determinar los dispositivos móviles o computadoras por los cuales accedes a nuestras plataformas.</li>
-              <li>Precisar la dirección IP de internet que utilizas al conectarte a nuestros servicios o al navegar en nuestra página web y móvil.</li>
-              <li>Conocer lo que ofrecemos en transacciones y movimientos de los productos y servicios.</li>
-              <li>Conocer la actividad de los clientes y visitantes a través del uso de nuestra página web y móvil.</li>
-              <li>Verificar solicitudes de reclamos realizados a través de mensajería instantánea y cualquiera de los accesos destinados para su ejecución.</li>
+            <h3 class="tpl-doc_block tpl-doc_h3" id="doc-nuestras-politicas-sobre-cookies">Nuestras políticas sobre cookies</h3>
+            <p class="tpl-doc_block tpl-doc_p">Debes saber que nuestro portal web y móvil cuenta con cookies, estas corresponden a pequeños ficheros que se almacenan en el terminal de los usuarios o clientes. También permiten a nuestros sistemas tener a la vista características o preferencias de la navegación en nuestro portal web o móvil, con la finalidad de personalizar tu acceso en sucesivas visitas, de manera más segura y recabar información estadística sobre la navegación efectuada, o conocer preferencias de los clientes y usuarios.</p>
+            <p class="tpl-doc_block tpl-doc_p">Siempre en cumplimiento a la normativa vigente, nuestra política de cookies se basa en el tratamiento de los datos personales y la protección de la intimidad en el ámbito de las comunicaciones electrónicas. N58 Banco Digital, Banco Microfinanciero, S.A., te solicitará consentimiento, cuando sea necesario, para el uso de las mismas, e informará de las cookies que utiliza en la página web y móvil.</p>
+            <h3 class="tpl-doc_block tpl-doc_h3" id="doc-sobre-tu-informacion">Sobre tu información:</h3>
+            <p class="tpl-doc_block tpl-doc_p">N58 Banco Digital, Banco Microfinanciero, S.A., en cumplimiento a la normativa vigente, te solicita y almacena información personal que abarca varias premisas, tales como: profesional, económica, crediticia, biométrica y cualquier otro dato que mantengamos en nuestros registros que nos permita identificarte. Conocer a nuestros clientes asegura la continuidad y mejora de nuestros servicios. Asimismo, podremos generar continuamente medidas de seguridad.</p>
+            <p class="tpl-doc_block tpl-doc_p">Al momento en que accedes a nuestro portal web, automáticamente podremos obtener lo siguiente:</p>
+            <ul class="tpl-doc_block tpl-doc_list tpl-doc_ul">
+              <li class="tpl-doc_li tpl-doc_li-ul">Tu geolocalización digital, con lo que reforzamos procesos de prevención de fraudes o la identificación de oportunidades para ofrecerte servicios adaptados a tus requerimientos.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Determinar los dispositivos móviles o computadoras por los cuales accedes a nuestras plataformas.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Precisar la dirección IP de internet que utilizas al conectarte a nuestros servicios o al navegar en nuestra página web y móvil.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Conocer lo que ofrecemos en transacciones y movimientos de los productos y servicios.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Conocer la actividad de los clientes y visitantes a través del uso de nuestra página web y móvil.</li>
+              <li class="tpl-doc_li tpl-doc_li-ul">Verificar solicitudes de reclamos realizados a través de mensajería instantánea y cualquiera de los accesos destinados para su ejecución.</li>
             </ul>
 
             <!-- Descargar PDF CTA (foot of document) -->
-            <div class="tpl-doc-download">
+            <div class="tpl-doc-download tpl-doc_block">
               <div class="tpl-doc-download_text">
-                <p class="f-text-h4 f-text-color-strong">¿Prefieres el documento completo?</p>
-                <p class="f-text-small f-text-color-muted">Descarga la versión oficial en PDF para imprimirla o archivarla.</p>
+                <p class="f-text-h4 f-text-color-strong tpl-doc_p-m">¿Prefieres el documento completo?</p>
+                <p class="f-text-small f-text-color-muted tpl-doc_p-m">Descarga la versión oficial en PDF para imprimirla o archivarla.</p>
               </div>
-              <a href="assets/docs/legal/politicas-de-privacidad.pdf" target="_blank" rel="noopener" class="flwr_button_primary is-invert" data-flwr-trigger="hover focus">
+              <a href="assets/docs/legal/politicas-de-privacidad.pdf" target="_blank" rel="noopener" class="flwr_button_primary is-invert tpl-doc_a--btn" data-flwr-trigger="hover focus">
                 <svg class="tpl-doc-download_ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <span data-flwr-target="label">Descargar PDF</span>
               </a>
@@ -379,15 +331,19 @@
       <!-- Brand column -->
       <div class="n58-footer-brand n58-reveal">
         <div class="n58-lottie-logo n58-footer-brandlogo" data-n58-lottie="assets/n58-logo-lottie.json" role="img" aria-label="N58 Banco Digital"></div>
-        <p class="f-text-small f-text-color-muted">Neo-banco microfinanciero 100% digital. Tu aliado financiero en Venezuela.</p>
+        <p class="f-text-small f-text-color-muted n58-footer-green_muted">Neo-banco microfinanciero 100% digital. Tu aliado financiero en Venezuela.</p>
         <div class="n58-footer-contact">
-          <a href="tel:+582129177299" class="flwr_button_primary is-small is-outline is-outline-ink" data-flwr-trigger="hover focus">
-            <svg class="n58-contact-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.8 4h2.1l1.2 3-1.5 1.2a11 11 0 0 0 5.2 5.2L15 12.9l3 1.2v2.1a2 2 0 0 1-2.2 2A13.5 13.5 0 0 1 4.8 6.2 2 2 0 0 1 6.8 4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            <span data-flwr-target="label">Línea N58 · +58 (212) 917 7299</span>
+          <a href="tel:+582129177299" class="flwr_button_primary is-sm is-outline is-outline-ink n58-footer-contact_btn" data-flwr-trigger="hover focus">
+            <svg class="n58-contact-ico n58-footer-contact_ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.8 4h2.1l1.2 3-1.5 1.2a11 11 0 0 0 5.2 5.2L15 12.9l3 1.2v2.1a2 2 0 0 1-2.2 2A13.5 13.5 0 0 1 4.8 6.2 2 2 0 0 1 6.8 4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="n58-footer-contact_label" data-flwr-target="label">Línea N58 · +58 (212) 917 7299</span>
           </a>
-          <a href="mailto:atencionalcliente@n58bancodigital.com" class="flwr_button_primary is-small is-outline is-outline-ink" data-flwr-trigger="hover focus">
-            <svg class="n58-contact-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v9A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.6"/><path d="m5 8 7 4.5L19 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span data-flwr-target="label">atencionalcliente@n58bancodigital.com</span>
+          <a href="mailto:atencionalcliente@n58bancodigital.com" class="flwr_button_primary is-sm is-outline is-outline-ink n58-footer-contact_btn" data-flwr-trigger="hover focus">
+            <svg class="n58-contact-ico n58-footer-contact_ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v9A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.6"/><path d="m5 8 7 4.5L19 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="n58-footer-contact_label" data-flwr-target="label">atencionalcliente@n58bancodigital.com</span>
+          </a>
+          <a href="mailto:info@n58bancodigital.com" class="flwr_button_primary is-sm is-outline is-outline-ink n58-footer-contact_btn" data-flwr-trigger="hover focus">
+            <svg class="n58-contact-ico n58-footer-contact_ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v9A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.6"/><path d="m5 8 7 4.5L19 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="n58-footer-contact_label" data-flwr-target="label">info@n58bancodigital.com</span>
           </a>
         </div>
       </div>
@@ -397,46 +353,46 @@
       <div class="n58-footer-cols">
         <div class="n58-footer-col n58-reveal is-2">
           <nav class="flwr_footer_group" aria-label="Empresas">
-            <p class="flwr_footer_group_title">Empresas</p>
-            <a href="productos-empresas.html" class="flwr_footer_link">Cuentas</a>
-            <a href="productos-empresas.html" class="flwr_footer_link">Pago Móvil</a>
-            <a href="productos-empresas.html" class="flwr_footer_link">Pago de Servicios</a>
-            <a href="productos-empresas.html" class="flwr_footer_link">Operaciones Cambiarias</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Empresas</p>
+            <a href="productos-empresas.html" class="flwr_footer_link n58-footer-green_link">Cuentas</a>
+            <a href="productos-empresas.html" class="flwr_footer_link n58-footer-green_link">Pago Móvil</a>
+            <a href="productos-empresas.html" class="flwr_footer_link n58-footer-green_link">Pago de Servicios</a>
+            <a href="productos-empresas.html" class="flwr_footer_link n58-footer-green_link">Operaciones Cambiarias</a>
           </nav>
           <nav class="flwr_footer_group" aria-label="Atención al Cliente">
-            <p class="flwr_footer_group_title">Atención al Cliente</p>
-            <a href="atencion-al-cliente.html" class="flwr_footer_link">Contáctanos</a>
-            <a href="preguntas-frecuentes.html" class="flwr_footer_link">Preguntas Frecuentes</a>
-            <a href="formulario-reclamos.html" class="flwr_footer_link">Reclamos</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Atención al Cliente</p>
+            <a href="atencion-al-cliente.html" class="flwr_footer_link n58-footer-green_link">Contáctanos</a>
+            <a href="preguntas-frecuentes.html" class="flwr_footer_link n58-footer-green_link">Preguntas Frecuentes</a>
+            <a href="formulario-reclamos.html" class="flwr_footer_link n58-footer-green_link">Reclamos</a>
           </nav>
         </div>
         <div class="n58-footer-col n58-reveal is-3">
           <nav class="flwr_footer_group" aria-label="Información de interés">
-            <p class="flwr_footer_group_title">Información de Interés</p>
-            <a href="conocenos.html" class="flwr_footer_link">Conócenos</a>
-            <a href="documentos-legales.html" class="flwr_footer_link">Documentos</a>
-            <a href="limites-diarios.html" class="flwr_footer_link">Límites Diarios</a>
-            <a href="informes-financieros.html" class="flwr_footer_link">Informes Financieros</a>
-            <a href="tasas.html" class="flwr_footer_link">Tasas</a>
-            <a href="memoria-y-cuenta-institucional.html" class="flwr_footer_link">Memoria y Cuenta Institucional</a>
-            <a href="tarifas-y-comisiones.html" class="flwr_footer_link">Tarifas y Comisiones</a>
-            <a href="concientizacion-y-capacitacion-sobre-ciberseguridad.html" class="flwr_footer_link">Concientización y Capacitación en Ciberseguridad</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Información de Interés</p>
+            <a href="conocenos.html" class="flwr_footer_link n58-footer-green_link">Conócenos</a>
+            <a href="documentos-legales.html" class="flwr_footer_link n58-footer-green_link">Documentos</a>
+            <a href="limites-diarios.html" class="flwr_footer_link n58-footer-green_link">Límites Diarios</a>
+            <a href="informes-financieros.html" class="flwr_footer_link n58-footer-green_link">Informes Financieros</a>
+            <a href="tasas.html" class="flwr_footer_link n58-footer-green_link">Tasas</a>
+            <a href="memoria-y-cuenta-institucional.html" class="flwr_footer_link n58-footer-green_link">Memoria y Cuenta Institucional</a>
+            <a href="tarifas-y-comisiones.html" class="flwr_footer_link n58-footer-green_link">Tarifas y Comisiones</a>
+            <a href="concientizacion-y-capacitacion-sobre-ciberseguridad.html" class="flwr_footer_link n58-footer-green_link">Concientización y Capacitación en Ciberseguridad</a>
           </nav>
         </div>
         <div class="n58-footer-col n58-reveal is-4">
           <nav class="flwr_footer_group" aria-label="Prevención LC/FT/FPADM">
-            <p class="flwr_footer_group_title">Prevención LC/FT/FPADM</p>
-            <a href="prevencion-y-control-de-legitimacion-de-capitales-ft-fpadm.html" class="flwr_footer_link">Prevención y Control de Legitimación de Capitales FT/FPADM</a>
-            <a href="boletines.html" class="flwr_footer_link">Boletines Informativos</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Prevención LC/FT/FPADM</p>
+            <a href="prevencion-y-control-de-legitimacion-de-capitales-ft-fpadm.html" class="flwr_footer_link n58-footer-green_link">Prevención y Control de Legitimación de Capitales FT/FPADM</a>
+            <a href="boletines.html" class="flwr_footer_link n58-footer-green_link">Boletines Informativos</a>
           </nav>
           <nav class="flwr_footer_group" aria-label="Defensoría al Cliente">
-            <p class="flwr_footer_group_title">Defensoría al Cliente</p>
-            <a href="defensoria-del-cliente-y-usuario-bancario.html" class="flwr_footer_link">Defensoría del Cliente y Usuario Bancario</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Defensoría al Cliente</p>
+            <a href="defensoria-del-cliente-y-usuario-bancario.html" class="flwr_footer_link n58-footer-green_link">Defensoría del Cliente y Usuario Bancario</a>
           </nav>
           <nav class="flwr_footer_group" aria-label="Legal">
-            <p class="flwr_footer_group_title">Legal</p>
-            <a href="contrato-unico-de-productos-y-servicios-financieros.html" class="flwr_footer_link">Contrato Único de Productos y Servicios Financieros</a>
-            <a href="politicas-de-privacidad.html" class="flwr_footer_link">Políticas de Privacidad</a>
+            <p class="flwr_footer_group_title n58-footer-green_title">Legal</p>
+            <a href="contrato-unico-de-productos-y-servicios-financieros.html" class="flwr_footer_link n58-footer-green_link">Contrato Único de Productos y Servicios Financieros</a>
+            <a href="politicas-de-privacidad.html" class="flwr_footer_link n58-footer-green_link">Políticas de Privacidad</a>
           </nav>
         </div>
       </div>
@@ -445,23 +401,21 @@
     <!-- Dark full-bleed bottom bar (matches the live footer's dark strip). -->
     <div class="n58-footer-bottom">
       <div class="n58-container n58-footer-bottom-inner">
-        <p class="f-text-tiny">© N58 Banco Digital, S.A. Todos los derechos reservados.</p>
-        <p class="f-text-tiny">Impulsado por Inteligencia Artificial para tu comodidad 🤖</p>
-        <p class="f-text-tiny">J-503581107</p>
-        <div class="n58-footer-help">
-          <span class="f-text-tiny">¿Necesitas ayuda? Llámanos:</span>
-          <a href="tel:+582129177299" class="flwr_button_secondary" data-flwr-trigger="hover focus"><span data-flwr-target="label">Línea N58</span></a>
-          <a href="https://wa.me/584142816245?text=Buenas!%20Vengo%20de%20la%20web%20de%20N58%20y%20me%20gustar%C3%ADa%20obtener%20m%C3%A1s%20informaci%C3%B3n%20." target="_blank" rel="noopener" class="flwr_button_primary" data-flwr-trigger="hover focus"><span data-flwr-target="label">WhatsApp</span></a>
+        <div class="n58-footer-help f-mode-dark">
+          <span class="f-text-h5 f-text-color-strong n58-footer-help_item">¿Necesitas ayuda? Llámanos</span>
+          <div class="n58-footer-help_btns"><a href="tel:+582129177299" class="flwr_button_secondary n58-footer-help_btn" data-flwr-trigger="hover focus"><span data-flwr-target="label">Línea N58</span></a><a href="https://wa.me/584142816245?text=Buenas!%20Vengo%20de%20la%20web%20de%20N58%20y%20me%20gustar%C3%ADa%20obtener%20m%C3%A1s%20informaci%C3%B3n%20." target="_blank" rel="noopener" class="flwr_button_primary n58-footer-help_btn" data-flwr-trigger="hover focus"><span data-flwr-target="label">WhatsApp</span></a></div>
+        </div>
+        <div class="n58-footer-bottom_legal">
+          <p class="f-text-tiny n58-footer-bottom_text">© <span data-n58-year>2026</span> N58 Banco Digital, S.A. Todos los derechos reservados.</p>
+          <p class="f-text-tiny n58-footer-bottom_text">Impulsado por Inteligencia Artificial para tu comodidad 🤖</p>
+          <p class="f-text-tiny n58-footer-bottom_text">J-503581107</p>
+          <p class="f-text-tiny n58-footer-bottom_text n58-footer-bottom_credit">Made with <span class="n58-footer-heart" aria-label="love" role="img">♥</span> by <a href="https://bruta.studio" target="_blank" rel="noopener" class="n58-footer-bottom_link">Bruta Studio</a></p>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- ════════════════ Floating AlaN chatbot trigger ════════════════ -->
-  <a href="https://interfaces.zapier.com/embed/chatbot/cmc1x2kxk001k4i9jbygtrl5e" target="_blank" rel="noopener" class="alan-fab flwr_button_primary">
-    <svg class="n58-alan-face" viewBox="0 0 11.671 6.103" fill="currentColor" aria-hidden="true" data-flwr-target="icon-leading"><path d="M9.724,4.634c-2.222,1.959-5.555,1.959-7.777,0,.267-.303.534-.606.801-.909,1.765,1.556,4.411,1.556,6.175,0,.267.303.534.606.801.909Z"/><polygon points="9.924 0 7.824 0 6.077 2.915 7.547 2.915 8.538 1.261 9.21 1.261 10.201 2.915 11.671 2.915 9.924 0"/><polygon points="3.847 0 1.747 0 0 2.915 1.47 2.915 2.461 1.261 3.133 1.261 4.124 2.915 5.594 2.915 3.847 0"/></svg>
-    <span data-flwr-target="label">Chatear con AlaN</span>
-  </a>
 
   <!-- ════════════════ Anti-fraud dialog (first-visit, cookie-gated) ════════════════ -->
   <!-- FLAG: confirm trigger with client — first-visit only vs every session. -->
@@ -473,7 +427,7 @@
       </span>
     </button>
     <div class="f-flex f-flex-column f-items-start f-gap-3 antifraud-body">
-      <h2 id="antifraud-title" class="f-text-h3 f-leading-tight f-text-balance f-text-color-strong">¡Protégete ante el fraude!</h2>
+      <h2 id="antifraud-title" class="f-text-h3 f-leading-tight f-text-balance f-text-color-strong antifraud-dialog_title">¡Protégete ante el fraude!</h2>
       <p class="f-text-body f-text-color-muted f-max-w-30ch">Solo ingresa tus datos en enlaces de nuestros canales verificados y seguros.</p>
       <div class="antifraud-urls">
         <p class="f-text-small"><span class="f-text-color-muted">Web oficial:</span> https://www.n58bancodigital.com/</p>
@@ -484,14 +438,11 @@
       <button type="button" class="flwr_button_primary" data-flwr-target="antifraud-close"><span data-flwr-target="label">Entendido</span></button>
     </div>
   </dialog>
-
-  <!-- Swiper.js (marquee dependency) — load before runtime so it hydrates on init. -->
-  <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js" defer></script>
   <!-- flwr runtime: hydrates navbar dropdown/hamburger, marquee scroll, tabs, etc. (self-inits on DOMContentLoaded). -->
-  <script src="assets/runtime.js" defer></script>
+  <script src="assets/runtime.js?v=6662911b" defer></script>
 
   <!-- Navbar theme: flips the bar to ink over light sections. -->
-  <script src="assets/n58-navbar-theme.js" defer></script>
+  <script src="assets/n58-navbar-theme.js?v=9497e310" defer></script>
 
   <!-- MOBILE-ONLY (≤991px) smoothness swap. Desktop is left completely untouched:
        the ticker keeps the draggable flwr marquee (drag-scrub + hover-pause). On
@@ -584,7 +535,7 @@
         function arrowBtn(src, label) {
           var b = document.createElement('button');
           b.type = 'button'; b.className = 'n58-gallery-arrow'; b.setAttribute('aria-label', label);
-          var img = document.createElement('img'); img.src = src; img.alt = ''; img.setAttribute('aria-hidden', 'true');
+          var img = document.createElement('img'); img.className = 'n58-gallery-arrow_img'; img.src = src; img.alt = ''; img.setAttribute('aria-hidden', 'true');
           b.appendChild(img); return b;
         }
         var controls = document.createElement('div');
@@ -777,42 +728,11 @@
 
   <!-- Hide the floating AlaN FAB once the footer's bottom bar is in view, so it
        stops overlapping the Línea N58 / WhatsApp CTAs. -->
-  <script>
-    (function () {
-      var fab = document.querySelector('.alan-fab');
-      var bar = document.querySelector('.n58-footer-bottom');
-      if (!fab || !bar || !('IntersectionObserver' in window)) return;
-      new IntersectionObserver(function (entries) {
-        fab.classList.toggle('is-hidden', entries[0].isIntersecting);
-      }, { threshold: 0 }).observe(bar);
-    })();
-  </script>
 
   <!-- AlaN FAB adapts to the section behind it (the piri-piri cursor pattern):
        over light-theme sections it takes the inverted lime-face look (like the
        Pago Móvil button); over dark sections it stays dark. Samples the section
        under the FAB's centre on scroll and walks up to the nearest f-mode-*. -->
-  <script>
-    (function () {
-      var fab = document.querySelector('.alan-fab');
-      if (!fab) return;
-      function themeBehind() {
-        var r = fab.getBoundingClientRect();
-        if (!r.width) return 'light';
-        var els = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        var behind = els.find(function (e) { return e !== fab && !fab.contains(e); });
-        // Use the whole SECTION's theme (not a nested dark media block inside a
-        // light section), so the FAB matches the section it's travelling over.
-        var sec = behind && behind.closest('section');
-        return (sec && sec.classList.contains('f-mode-dark')) ? 'dark' : 'light';
-      }
-      var raf = 0;
-      function update() { raf = 0; fab.classList.toggle('is-invert', themeBehind() === 'light'); }
-      addEventListener('scroll', function () { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
-      addEventListener('resize', function () { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
-      update();
-    })();
-  </script>
 
   <!-- Touch devices have no :hover, so trigger the button lift + offset-shadow
        when a button crosses the middle band of the viewport as you scroll (either
@@ -924,7 +844,7 @@
   </script>
 
   <!-- Spline 3D loader (shared): preloads below-the-fold scenes before arrival; desktop-only. No-op when the page has no [data-n58-spline] stage. -->
-  <script src="assets/spline-loader.js" defer></script>
+  <script src="assets/spline-loader.js?v=c7aa5854" defer></script>
 
   <!-- Product tabs auto-play (the FAQ loop, tab-flavored). When the section
        scrolls into view, the active tab's 4px bar ramps left→right over
@@ -997,10 +917,13 @@
     window.addEventListener('load', function () {
       if (!window.lottie) return;
       document.querySelectorAll('[data-n58-lottie]').forEach(function (el) {
-        var anim = lottie.loadAnimation({ container: el, renderer: 'svg', loop: false, autoplay: true, path: el.getAttribute('data-n58-lottie') });
+        var anim = el.__flwrLottie || lottie.loadAnimation({ container: el, renderer: 'svg', loop: false, autoplay: true, path: el.getAttribute('data-n58-lottie') });
         el.__flwrLottie = anim;
-        el.addEventListener('mouseenter', function () { anim.setDirection(-1); anim.setSpeed(1); anim.play(); });
-        el.addEventListener('mouseleave', function () { anim.setDirection(1); anim.setSpeed(1); anim.play(); });
+        /* Mouse only: on iOS a mouseenter that animates the DOM makes the first tap a "hover" (logo link needs two taps). */
+        if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          el.addEventListener('mouseenter', function () { anim.setDirection(-1); anim.setSpeed(1); anim.play(); });
+          el.addEventListener('mouseleave', function () { anim.setDirection(1); anim.setSpeed(1); anim.play(); });
+        }
       });
     });
   </script>
@@ -1035,31 +958,11 @@
     (function () {
       var dlg = document.querySelector('.antifraud-dialog');
       if (!dlg) return;
-      /* Native showModal() blocks clicks behind the dialog but NOT scrolling. Lock
-         the page with the body-fixed technique (bulletproof incl. iOS touch —
-         plain overflow:hidden leaks on iOS). The dialog lives in the top layer, so
-         position:fixed on the body doesn't move it. Restore the scroll on close. */
-      var savedY = 0;
-      function lock() {
-        savedY = window.scrollY || 0;
-        var b = document.body;
-        b.style.position = 'fixed';
-        b.style.top = (-savedY) + 'px';
-        b.style.left = '0';
-        b.style.right = '0';
-        b.style.width = '100%';
-      }
-      function unlock() {
-        var b = document.body;
-        b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = '';
-        window.scrollTo(0, savedY);
-      }
-      dlg.addEventListener('close', unlock);   /* covers the buttons + Escape */
+      /* Scroll lock + settle gate for this modal live in assets/n58-dialogs.js. */
       function n58ShowAntifraud() {
         try {
           if (!localStorage.getItem("n58-antifraud-seen") && typeof dlg.showModal === "function") {
             dlg.showModal();
-            lock();
             dlg.focus();
           }
         } catch (e) {}
@@ -1148,12 +1051,7 @@
     })();
   </script>
 
-  <!-- AlaN chat widget slot — one script, wired to .alan-fab.
-       Base site and "empresas": Vanny (custom mode; brand theme and Nugros font
-       come from the tenant config in Widget Studio).
-       "empresas-zapier": that version rewrites this src to
-       assets/n58-zapier-chat.js, which panels in the Zapier bot instead. -->
-  <script src="assets/n58-zapier-chat.js" data-tenant="n58" defer></script>
+  <!-- AlaN chat widget slot: one script, wired to the floating AlaN button. The "chatbot" feature (hidden in the empresas versions) removes the button, the menu block and this script. -->
 
 </div>
 </body>

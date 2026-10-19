@@ -1460,7 +1460,7 @@
   var ui = {};                            // element refs
   var panelShownAt = 0;
   var SCREENS = {
-    idle:     { kicker: 'Easter egg', title: 'El desafío de AlaN', text: 'Recoge todas las monedas de cada nivel antes de que se acabe la energía y sal por la puerta. AlaN corre, salta y trepa paredes.', primary: 'Jugar', secondary: null },
+    idle:     { kicker: 'Juega con AlaN', title: 'El desafío de AlaN', text: 'Recoge todas las monedas de cada nivel antes de que se acabe la energía y sal por la puerta. AlaN corre, salta y trepa paredes.', primary: 'Jugar', secondary: null },
     paused:   { kicker: 'Pausa', title: 'Un respiro', text: '', primary: 'Continuar', secondary: 'Salir' },
     levelWon: { kicker: 'Nivel completado', title: '', text: '', primary: 'Siguiente nivel', secondary: null },
     lost:     { kicker: 'Sin energía', title: 'AlaN se quedó sin energía', text: '', primary: 'Reintentar', secondary: 'Salir' },
@@ -1693,6 +1693,25 @@
     btn.addEventListener('lostpointercapture', release);
     btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     btn.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
+    btn.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+    btn.addEventListener('touchend', function (e) { e.preventDefault(); }, { passive: false });
+    hardenNode(btn);
+    var kids = btn.querySelectorAll('*');
+    for (var i = 0; i < kids.length; i++) hardenNode(kids[i]);
+  }
+  /* iOS Safari: a long press on a button's <img> child (or on the canvas) starts
+     text/image selection + the link/image callout. Kill it at the element level
+     so it holds even if the stylesheet rule loses specificity. */
+  function hardenNode(el) {
+    var st = el.style;
+    st.webkitUserSelect = 'none'; st.userSelect = 'none';
+    st.webkitTouchCallout = 'none';
+    st.webkitTapHighlightColor = 'transparent';
+    st.touchAction = 'none';
+    if (el.tagName === 'IMG') { el.draggable = false; st.pointerEvents = 'none'; }
+    el.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    el.addEventListener('selectstart', function (e) { e.preventDefault(); });
+    el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   }
 
   /* ═══════════════════════ Boot ═══════════════════════════════════════════ */
@@ -1736,6 +1755,9 @@
       if (e.target === overlay) primaryAction();               // backdrop = primary action
     });
     if (ui.close) ui.close.addEventListener('click', function (e) { e.preventDefault(); quitToIdle('close'); });
+    hardenNode(canvas);
+    if (ui.touch) hardenNode(ui.touch);
+    ui.touch && (ui.touch.style.pointerEvents = 'none');
     bindHold(wrap.querySelector('[data-alan-touch="left"]'), 'left');
     bindHold(wrap.querySelector('[data-alan-touch="right"]'), 'right');
     bindHold(wrap.querySelector('[data-alan-touch="jump"]'), 'jump');

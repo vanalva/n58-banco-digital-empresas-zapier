@@ -24,7 +24,7 @@
   --tpl-accent-line:   color-mix(in oklch, var(--tpl-accent) 55%, transparent);
   --tpl-card-surface:  color-mix(in oklch, var(--_palette---neutral--900) 5%, transparent);
   --tpl-card-border:   color-mix(in oklch, var(--_palette---neutral--500) 24%, transparent);
-  --tpl-card-radius:   var(--_component---card--radius);
+  --tpl-card-radius:   var(--_radius---panel);
 }
 
 .tpl-producto.is-accent-core        { --tpl-accent: var(--_palette---core--500);        }
@@ -43,7 +43,8 @@
   border-top-color: var(--_theme---border);
   padding-top: clamp(4rem, 7vw, 7rem);
   padding-bottom: clamp(4rem, 7vw, 7rem);
-  background-color: var(--_theme---surface--main);
+  background-color: var(--_section---surface);
+  color: var(--_section---text);
 }
 .tpl-resources {
   display: flex;
@@ -54,35 +55,35 @@
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.6fr);
   column-gap: var(--_spacing---step--6);
-  row-gap: 1rem;
+  row-gap: var(--_spacing---step--3);
   align-items: end;
 }
-.tpl-resources_head > :first-child {
+[data-flwr] .tpl-resources_eyebrow {
   grid-column: 1 / -1;
   margin-bottom: 0.25rem;
 }
-.tpl-resources_head > :last-child {
+[data-flwr] .tpl-resources_lede {
   max-width: 32rem;
-  padding-bottom: 0.35rem;
+  padding-bottom: var(--_spacing---step--1);
 }
 .tpl-resources_links {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-  column-gap: 1rem;
-  row-gap: 1rem;
+  column-gap: var(--_spacing---step--3);
+  row-gap: var(--_spacing---step--3);
 }
 .tpl-resource-card {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  column-gap: 1.25rem;
-  row-gap: 1rem;
+  column-gap: var(--_spacing---step--4);
+  row-gap: var(--_spacing---step--3);
   align-items: start;
-  min-height: 12.5rem;
-  padding-top: 1.5rem;
-  padding-right: 1.5rem;
-  padding-bottom: 1.5rem;
-  padding-left: 1.5rem;
+  min-height: calc(12.5rem + var(--_spacing---step--5) * 2 + 2px);
+  padding-top: var(--_spacing---step--5);
+  padding-right: var(--_spacing---step--5);
+  padding-bottom: var(--_spacing---step--5);
+  padding-left: var(--_spacing---step--5);
   overflow: hidden;
   border-top-width: 1px;
   border-right-width: 1px;
@@ -100,8 +101,8 @@
   border-top-right-radius: var(--_component---card--radius);
   border-bottom-right-radius: var(--_component---card--radius);
   border-bottom-left-radius: var(--_component---card--radius);
-  background-color: var(--_theme---surface--raised);
-  color: var(--_theme---text--strong);
+  background-color: var(--_section---surface-raised);
+  color: var(--_section---text-strong);
   transition-property: transform, background-color, border-color;
   transition-duration: 240ms;
   transition-timing-function: var(--_motion---ease-emphasized);
@@ -113,10 +114,10 @@
   bottom: -3rem;
   width: 8rem;
   height: 8rem;
-  border-top-left-radius: 999rem;
-  border-top-right-radius: 999rem;
-  border-bottom-right-radius: 999rem;
-  border-bottom-left-radius: 999rem;
+  border-top-left-radius: var(--_radius---pill);
+  border-top-right-radius: var(--_radius---pill);
+  border-bottom-right-radius: var(--_radius---pill);
+  border-bottom-left-radius: var(--_radius---pill);
   background-color: var(--tpl-accent-soft);
   transition-property: transform;
   transition-duration: 240ms;
@@ -132,16 +133,16 @@
 .tpl-resource-card:hover::after { transform: scale(1.35); }
 .tpl-resource-card_num {
   color: var(--tpl-accent);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: var(--_typography---size--tiny);
+  font-weight: var(--_typography---weight--extrabold);
+  letter-spacing: var(--_typography---tracking--wider);
 }
 .tpl-resource-card_body {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  row-gap: 0.65rem;
+  row-gap: var(--_spacing---step--2);
 }
 .tpl-resource-card_arrow {
   position: relative;
@@ -152,12 +153,12 @@
 }
 @media (max-width: 767px) {
   .tpl-resources_head { grid-template-columns: 1fr; }
-  .tpl-resources_head > :first-child { grid-column: auto; }
-  .tpl-resource-card { min-height: 10rem; }
+  [data-flwr] .tpl-resources_eyebrow { grid-column: auto; }
+  .tpl-resource-card { min-height: calc(10rem + var(--_spacing---step--5) * 2 + 2px); }
 }
 
 /* Dark sections need a softer card surface (lift off the ink, not darken it). */
-.tpl-producto .f-mode-dark {
+[data-flwr] .f-mode-dark.tpl-producto_dark {
   --tpl-card-surface: color-mix(in oklch, var(--_palette---neutral--100) 6%, transparent);
   --tpl-card-border:  color-mix(in oklch, var(--_palette---neutral--100) 16%, transparent);
 }
@@ -173,11 +174,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  row-gap: 0.4rem;
-  column-gap: 0.4rem;
+  row-gap: var(--_spacing---step--1);
+  column-gap: var(--_spacing---step--1);
   margin-top: 0;
   margin-right: 0;
-  margin-bottom: 3rem;
+  margin-bottom: var(--_spacing---step--7);
   margin-left: 0;
   max-width: 46rem;
 }
@@ -191,10 +192,10 @@
 /* Media frame — soft rounded, subtle accent ring on hover. */
 .tpl-media-frame {
   order: var(--tpl-media-order);
-  border-top-left-radius: var(--_component---card--radius);
-  border-top-right-radius: var(--_component---card--radius);
-  border-bottom-right-radius: var(--_component---card--radius);
-  border-bottom-left-radius: var(--_component---card--radius);
+  border-top-left-radius: var(--_radius---modal);
+  border-top-right-radius: var(--_radius---modal);
+  border-bottom-right-radius: var(--_radius---modal);
+  border-bottom-left-radius: var(--_radius---modal);
   overflow-x: hidden;
   overflow-y: hidden;
 }
@@ -213,46 +214,46 @@
   flex-direction: column;
   align-items: var(--tpl-hero-items, flex-start);
   text-align: var(--tpl-hero-align, left);
-  row-gap: 1.1rem;
-  column-gap: 1.1rem;
+  row-gap: var(--_spacing---step--3);
+  column-gap: var(--_spacing---step--3);
 }
 .tpl-hero_media { order: var(--tpl-media-order); }
 .tpl-hero_title { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
 
 /* stacked → single column, media below. */
-.tpl-producto.is-hero-stacked .tpl-hero { --tpl-hero-cols: minmax(0, 1fr); }
-.tpl-producto.is-hero-stacked .tpl-hero_media { order: var(--tpl-media-order); }
-.tpl-producto.is-hero-stacked .tpl-hero_text { max-width: 46rem; }
+[data-flwr] .tpl-hero.is-hero-stacked { --tpl-hero-cols: minmax(0, 1fr); }
+[data-flwr] .tpl-hero_media.is-hero-stacked { order: var(--tpl-media-order); }
+[data-flwr] .tpl-hero_text.is-hero-stacked { max-width: 46rem; }
 
 /* centered → centered text, media below, narrower. */
-.tpl-producto.is-hero-centered .tpl-hero {
+[data-flwr] .tpl-hero.is-hero-centered {
   --tpl-hero-cols: minmax(0, 1fr);
   justify-items: center;
 }
-.tpl-producto.is-hero-centered .tpl-hero_text {
+[data-flwr] .tpl-hero_text.is-hero-centered {
   --tpl-hero-align: center;
   --tpl-hero-items: center;
   order: 0;
   max-width: 42rem;
 }
-.tpl-producto.is-hero-centered .tpl-hero_media {
+[data-flwr] .tpl-hero_media.is-hero-centered {
   order: 1;
   width: 100%;
   max-width: 40rem;
 }
-.tpl-producto.is-hero-centered .tpl-hero_stats { justify-content: center; }
+[data-flwr] .tpl-hero_stats.is-hero-centered { justify-content: center; }
 
 /* Hero stat row. */
 .tpl-hero_stats {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 2.4rem;
-  row-gap: 1.2rem;
-  margin-top: 1.6rem;
+  column-gap: var(--_spacing---step--7);
+  row-gap: var(--_spacing---step--4);
+  margin-top: var(--_spacing---step--5);
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
-  padding-top: 1.4rem;
+  padding-top: var(--_spacing---step--4);
   padding-right: 0;
   padding-bottom: 0;
   padding-left: 0;
@@ -270,22 +271,22 @@
 }
 .tpl-stat_num {
   font-size: clamp(1.5rem, 3vw, 2.1rem);
-  font-weight: 800;
-  line-height: 1;
+  font-weight: var(--_typography---weight--extrabold);
+  line-height: var(--_typography---leading--none);
   color: var(--tpl-accent);
 }
 .tpl-stat_lbl {
-  font-size: 0.82rem;
+  font-size: var(--_typography---size--small);
   letter-spacing: 0.02em;
-  color: var(--_theme---text--muted, var(--_palette---neutral--400));
+  color: var(--_section---text-muted, var(--_palette---neutral--400));
 }
 
 /* ══════════════ 02 · CARACTERÍSTICAS ══════════════ */
 .tpl-feats {
   display: grid;
   grid-template-columns: repeat(var(--tpl-cards-cols, 3), minmax(0, 1fr));
-  column-gap: 1.4rem;
-  row-gap: 1.4rem;
+  column-gap: var(--_spacing---step--4);
+  row-gap: var(--_spacing---step--4);
   margin-top: 0;
   margin-right: 0;
   margin-bottom: 0;
@@ -320,13 +321,14 @@
   left: 0;
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
+  transform: var(--tpl-feat-flip, none);
   transition-property: transform;
   transition-duration: 0.75s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: 0s;
   will-change: transform;
 }
-.tpl-feat:hover .tpl-feat_flip,
+.tpl-feat:hover { --tpl-feat-flip: rotateY(180deg); }
 .tpl-feat_flip.is-flipped {
   -webkit-transform: rotateY(180deg);
   transform: rotateY(180deg);
@@ -350,10 +352,10 @@
 }
 /* FRONT face */
 .tpl-feat_front {
-  padding-top: 1.8rem;
-  padding-right: 1.6rem;
-  padding-bottom: 1.8rem;
-  padding-left: 1.6rem;
+  padding-top: var(--_spacing---step--6);
+  padding-right: var(--_spacing---step--5);
+  padding-bottom: var(--_spacing---step--6);
+  padding-left: var(--_spacing---step--5);
   border-top-width: var(--_theme---border--width-2);
   border-right-width: var(--_theme---border--width-2);
   border-bottom-width: var(--_theme---border--width-2);
@@ -413,11 +415,11 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  row-gap: 0.4rem;
-  padding-top: 1.4rem;
-  padding-right: 1.5rem;
-  padding-bottom: 1.6rem;
-  padding-left: 1.5rem;
+  row-gap: var(--_spacing---step--1);
+  padding-top: var(--_spacing---step--4);
+  padding-right: var(--_spacing---step--5);
+  padding-bottom: var(--_spacing---step--5);
+  padding-left: var(--_spacing---step--5);
 }
 .tpl-feat_back_title { color: var(--_palette---neutral--0); }
 .tpl-feat_back_desc { color: var(--_palette---neutral--100); }
@@ -435,24 +437,24 @@
   will-change: transform;
 }
 .tpl-feat_num {
-  font-size: 2.4rem;
-  font-weight: 800;
-  line-height: 1;
+  font-size: var(--_typography---size--h3);
+  font-weight: var(--_typography---weight--extrabold);
+  line-height: var(--_typography---leading--none);
   color: var(--tpl-accent);
 }
 .tpl-feat_body {
   display: flex;
   flex-direction: column;
-  row-gap: 0.55rem;
-  column-gap: 0.55rem;
-  margin-top: 0.9rem;
+  row-gap: var(--_spacing---step--2);
+  column-gap: var(--_spacing---step--2);
+  margin-top: var(--_spacing---step--3);
 }
 .tpl-feat_title { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
 .tpl-feat_link {
   align-self: flex-start;
   margin-top: auto;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--_typography---size--small);
+  font-weight: var(--_typography---weight--bold);
   letter-spacing: 0.01em;
   color: var(--tpl-accent);
   text-decoration-line: none;
@@ -467,7 +469,7 @@
   transition-delay: 0s;
 }
 .tpl-feat_link:hover { border-bottom-color: var(--tpl-accent); }
-.tpl-producto.is-cards-row .tpl-feat_num { font-size: 1.9rem; }
+[data-flwr] .tpl-feat_num.is-cards-row { font-size: var(--_typography---size--h4); }
 
 /* ══════════════ 03 · BENEFICIOS (4 renderers, one shown) ══════════════ */
 .tpl-benef_tabs,
@@ -475,34 +477,37 @@
 .tpl-benef_grid,
 .tpl-benef_stack { display: none; }
 
-.tpl-producto.is-beneficios-tabs      .tpl-benef_tabs      { display: block; }
-.tpl-producto.is-beneficios-accordion .tpl-benef_accordion { display: block; }
-.tpl-producto.is-beneficios-grid      .tpl-benef_grid      { display: grid; }
-.tpl-producto.is-beneficios-stack     .tpl-benef_stack     { display: grid; }
+[data-flwr] .tpl-benef_tabs.is-beneficios-tabs { display: block; }
+[data-flwr] .tpl-benef_accordion.is-beneficios-accordion { display: block; }
+[data-flwr] .tpl-benef_grid.is-beneficios-grid { display: grid; }
+[data-flwr] .tpl-benef_stack.is-beneficios-stack { display: grid; }
 /* Stack renderer carries its own left-aligned heading, so drop the centered one. */
-.tpl-producto.is-beneficios-stack .tpl-sec-head--center { display: none; }
+[data-flwr] .tpl-sec-head--center.is-beneficios-stack { display: none; }
 
 /* ── STACK renderer: info left + auto-cycling deck right (the N58 method) ── */
 .tpl-benef_stack {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   column-gap: clamp(2rem, 5vw, 5rem);
-  row-gap: 2.4rem;
+  row-gap: var(--_spacing---step--7);
   align-items: center;
+  /* reserve room for the peeking cards 2-3 so they never push the page sideways */
+  padding-right: calc(var(--_component---card-stack--offset-x) * 2);
+  padding-bottom: calc(var(--_component---card-stack--offset-y) * 2);
 }
 .tpl-benef_stack_info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  row-gap: 1rem;
+  row-gap: var(--_spacing---step--3);
 }
-.tpl-benef_stack_info h2 { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
+[data-flwr] .tpl-benef_stack-title { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
 /* Segment indicators — current = accent, like the live progress bars. */
 .tpl-benef_dots {
   display: flex;
   flex-direction: row;
-  column-gap: 0.5rem;
-  row-gap: 0.5rem;
-  margin-top: 0.8rem;
+  column-gap: var(--_spacing---step--2);
+  row-gap: var(--_spacing---step--2);
+  margin-top: var(--_spacing---step--3);
 }
 .tpl-benef_dot {
   width: 2.2rem;
@@ -519,7 +524,7 @@
   border-right-width: 0;
   border-bottom-width: 0;
   border-left-width: 0;
-  background-color: color-mix(in oklch, var(--_theme---text--main) 26%, transparent);
+  background-color: color-mix(in oklch, var(--_section---text) 26%, transparent);
   cursor: pointer;
   transition-property: background-color, width;
   transition-duration: 0.4s;
@@ -538,15 +543,18 @@
 .tpl-benef_deck {
   /* Shorter/landscape so the centered content doesn't read top-heavy. */
   --_component---card-stack--aspect-ratio: 3 / 2;
-  --_component---card--text: var(--_theme---text--main);
+  --_component---card--text: var(--_section---text);
   /* The card face/border/notch come from .n58-notch-border on each slide — a
      bordered notch (border follows the diagonal), like the buttons. Fill matches
      the dark section (surface--main); tune the notch bigger + more rounded than
      the class default for these large cards. */
-  --n58-notch-fill: var(--_theme---surface--main);
-  --n58-notch-border-color: var(--_theme---border--main);
+  --n58-notch-fill: var(--_section---surface);
+  --n58-notch-border-color: var(--_section---border);
   --n58-notch-size: 2rem;
-  --n58-notch-radius: var(--n58-radius-control);
+  /* Must equal the slide's own radius (panel role, set on .tpl-benef_slide in project.css): the slide has
+     overflow:hidden at that radius, so a smaller ::before radius gets its border
+     corners clipped away (border vanished at TL/BR/BL). */
+  --n58-notch-radius: var(--_radius---panel);
   /* No padding: the front card fills the deck box so it vertically centers with
      the info column; deeper cards peek by OVERFLOWING down-right (the framework
      keeps the wrap overflow visible). Padding here would shrink + lift the front
@@ -559,27 +567,31 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  row-gap: 1.1rem;
-  width: 100%;
-  height: 100%;
-  padding-top: 2.4rem;
-  padding-right: 2.4rem;
-  padding-bottom: 2.4rem;
-  padding-left: 2.4rem;
+  row-gap: var(--_spacing---step--3);
+  align-self: stretch;
+  flex-grow: 1;
+  min-width: 0;
+  padding-top: var(--_spacing---step--7);
+  padding-right: var(--_spacing---step--7);
+  padding-bottom: var(--_spacing---step--7);
+  padding-left: var(--_spacing---step--7);
 }
-/* Smaller than f-text-h2 so long titles wrap to 2 lines inside the card. */
-.tpl-benef_slide_title {
+/* Smaller than f-text-h2 but still a real title; long titles WRAP to 2 lines
+   inside the sticker (never shrink the type to make them fit). */
+[data-flwr] .tpl-benef_slide_title {
   margin-top: 0;
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
   font-size: clamp(1.4rem, 2vw, 1.95rem);
-  line-height: 1.2;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  line-height: var(--_typography---leading--ui);
   /* Contain the highlight so it doesn't span the whole card width. min(...,100%)
      matters: a bare 18rem let a long title's inline-block grow WIDER than this
      box and overflow to the right, which read as off-center content (the
      description below it stayed centered, so the card looked skewed). */
-  max-width: min(26rem, 100%);
+  max-width: min(32rem, 100%);
 }
 /* Accent highlight behind the title (like the live "Seguridad" mark). */
 /* ONE cohesive block behind the whole title (text wraps inside it) — no per-line
@@ -592,6 +604,7 @@
   /* Wrap inside the title box instead of overflowing it — text-align: center
      cannot center a box that is wider than its containing block. */
   max-width: 100%;
+  overflow-wrap: break-word;
   padding-top: 0.3em;
   padding-right: 0.5em;
   padding-bottom: 0.3em;
@@ -604,30 +617,30 @@
   border-bottom-left-radius: var(--n58-radius-control);
 }
 .tpl-benef_slide_desc {
-  color: var(--_theme---text--muted);
+  color: var(--_section---text-muted);
   max-width: 26rem;   /* tidy reading measure, centered */
 }
 
 /* Tabs: accent-tint the active trigger + its progress underline. */
-.tpl-benef_tabs .flwr_tabs_trigger[aria-selected="true"] { color: var(--tpl-accent); }
-.tpl-benef_tabs .n58-tab-progress { background-color: var(--tpl-accent); }
+[data-flwr] .flwr_tabs_trigger[aria-selected="true"].tpl-benef_trigger { color: var(--tpl-accent); }
+[data-flwr] .n58-tab-progress.tpl-benef_progress { background-color: var(--tpl-accent); }
 .tpl-benef_panel {
   display: flex;
   flex-direction: column;
-  row-gap: 0.8rem;
-  column-gap: 0.8rem;
-  padding-top: 1.6rem;
+  row-gap: var(--_spacing---step--3);
+  column-gap: var(--_spacing---step--3);
+  padding-top: var(--_spacing---step--5);
   padding-right: 0;
-  padding-bottom: 0.4rem;
+  padding-bottom: var(--_spacing---step--1);
   padding-left: 0;
 }
-.tpl-benef_panel h3 { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
+[data-flwr] .tpl-benef_panel-title { margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; }
 
 /* Grid: 3 accent-icon panels. */
 .tpl-benef_grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-gap: 1.4rem;
-  row-gap: 1.4rem;
+  column-gap: var(--_spacing---step--4);
+  row-gap: var(--_spacing---step--4);
   margin-top: 0;
   margin-right: 0;
   margin-bottom: 0;
@@ -643,12 +656,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  row-gap: 0.7rem;
-  column-gap: 0.7rem;
-  padding-top: 1.8rem;
-  padding-right: 1.6rem;
-  padding-bottom: 1.8rem;
-  padding-left: 1.6rem;
+  row-gap: var(--_spacing---step--2);
+  column-gap: var(--_spacing---step--2);
+  padding-top: var(--_spacing---step--6);
+  padding-right: var(--_spacing---step--5);
+  padding-bottom: var(--_spacing---step--6);
+  padding-left: var(--_spacing---step--5);
   border-top-left-radius: var(--tpl-card-radius);
   border-top-right-radius: var(--tpl-card-radius);
   border-bottom-right-radius: var(--tpl-card-radius);
@@ -680,8 +693,8 @@
   background-color: var(--tpl-accent-soft);
   color: var(--tpl-accent);
 }
-.tpl-benef_ico svg { width: 1.5rem; height: 1.5rem; }
-.tpl-benef_card h3 { margin-top: 0.2rem; margin-right: 0; margin-bottom: 0; margin-left: 0; }
+[data-flwr] .tpl-benef_svg { width: 1.5rem; height: 1.5rem; }
+[data-flwr] .tpl-benef_card-title { margin-top: 0.2rem; margin-right: 0; margin-bottom: 0; margin-left: 0; }
 
 /* ══════════════ 04 · REQUISITOS ══════════════ */
 .tpl-reqs {
@@ -695,14 +708,14 @@
   position: relative;
   order: var(--tpl-media-order);
 }
-.tpl-reqs_media .tpl-media-frame { order: 0; }
+[data-flwr] .tpl-media-frame.tpl-reqs_frame { order: 0; }
 .tpl-reqs_body {
   order: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  row-gap: 1rem;
-  column-gap: 1rem;
+  row-gap: var(--_spacing---step--3);
+  column-gap: var(--_spacing---step--3);
 }
 /* Accent stat badge floating on the media. */
 .tpl-reqs_stat {
@@ -713,12 +726,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 5.6rem;
-  height: 5.6rem;
-  padding-top: 0.4rem;
-  padding-right: 0.4rem;
-  padding-bottom: 0.4rem;
-  padding-left: 0.4rem;
+  width: calc(5.6rem + var(--_spacing---step--1) * 2);
+  height: calc(5.6rem + var(--_spacing---step--1) * 2);
+  padding-top: var(--_spacing---step--1);
+  padding-right: var(--_spacing---step--1);
+  padding-bottom: var(--_spacing---step--1);
+  padding-left: var(--_spacing---step--1);
   border-top-left-radius: var(--_component---card--radius);
   border-top-right-radius: var(--_component---card--radius);
   border-bottom-right-radius: var(--_component---card--radius);
@@ -726,17 +739,17 @@
   background-color: var(--tpl-accent);
   color: var(--_palette---neutral--900);
 }
-.tpl-reqs_stat-num { font-size: 2rem; font-weight: 800; line-height: 1; }
-.tpl-reqs_stat-lbl { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.tpl-reqs_stat-num { font-size: var(--_typography---size--h4); font-weight: 800; line-height: 1; }
+.tpl-reqs_stat-lbl { font-size: var(--_typography---size--tiny); letter-spacing: 0.08em; text-transform: uppercase; }
 
 .tpl-reqs_list {
   display: flex;
   flex-direction: column;
-  row-gap: 0.9rem;
-  column-gap: 0.9rem;
-  margin-top: 0.4rem;
+  row-gap: var(--_spacing---step--3);
+  column-gap: var(--_spacing---step--3);
+  margin-top: var(--_spacing---step--1);
   margin-right: 0;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--_spacing---step--1);
   margin-left: 0;
   padding-top: 0;
   padding-right: 0;
@@ -748,8 +761,8 @@
 .tpl-req {
   display: flex;
   align-items: flex-start;
-  column-gap: 0.85rem;
-  row-gap: 0.85rem;
+  column-gap: var(--_spacing---step--3);
+  row-gap: var(--_spacing---step--3);
 }
 .tpl-req_check {
   flex-grow: 0;
@@ -767,7 +780,7 @@
   background-color: var(--tpl-accent-soft);
   color: var(--tpl-accent);
 }
-.tpl-req_check svg { width: 1.05rem; height: 1.05rem; }
+[data-flwr] .tpl-req_svg { width: 1.05rem; height: 1.05rem; }
 
 /* Recaudos rows that are not bullets. A published compliance list is an ordered
    document: sub-headings scope the bullets under them ("Representante(s)
@@ -775,28 +788,29 @@
    legalisation). Both are <li> so document order survives; neither takes the
    check icon, and neither counts towards the "N recaudos" badge. */
 .tpl-req.is-heading {
-  margin-top: 0.7rem;
+  margin-top: var(--_spacing---step--2);
   margin-right: 0;
   margin-bottom: -0.15rem;
   margin-left: 0;
 }
 .tpl-req.is-heading:first-child { margin-top: 0; }
-.tpl-req_heading {
-  font-weight: 700;
-  letter-spacing: 0.01em;
+[data-flwr] .tpl-req_heading {
+  font-weight: var(--_typography---weight--bold);
+  /* was 0.01em but lost to f-text-body (normal) on 1.2.1, so it rendered normal; scoped now it would win, so state what rendered */
+  letter-spacing: normal;
 }
 .tpl-req.is-note {
-  margin-top: 0.5rem;
+  margin-top: var(--_spacing---step--2);
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
-  padding-top: 0.75rem;
+  padding-top: var(--_spacing---step--2);
   padding-right: 0;
   padding-bottom: 0;
   padding-left: 0;
   border-top-width: 1px;
   border-top-style: solid;
-  border-top-color: var(--_theme---border--subtle);
+  border-top-color: var(--_section---border-subtle);
 }
 .tpl-req_note {
   display: block;
@@ -805,7 +819,7 @@
 
 /* A recaudos row that carries a link (OLD publishes one recaudos document as a
    bare Drive URL on cuenta-corriente-personas). Wraps instead of overflowing. */
-.tpl-req a {
+[data-flwr] .tpl-req_link {
   color: inherit;
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
@@ -819,42 +833,43 @@
    geometry, and the open-state ink rule in project.css names only `p` — the
    list items carry .f-text-color-muted, which would keep them muted against the
    open item's magenta fill. Both rules below are scoped to the product FAQ. */
-.tpl-faq-section .n58-faq-list {
-  margin-top: 0.6rem;
+[data-flwr] .n58-faq-list.tpl-faq_list {
+  margin-top: var(--_spacing---step--2);
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
   padding-top: 0;
   padding-right: 0;
   padding-bottom: 0;
-  padding-left: 1.15rem;
+  padding-left: var(--_spacing---step--4);
   list-style-type: disc;
   list-style-position: outside;
 }
-.tpl-faq-section .n58-faq-list li { margin-top: 0.25rem; }
-.tpl-faq-section .flwr_accordion_content a {
+[data-flwr] .tpl-faq_li {
+  color: var(--n58-faq-answer-ink, var(--_section---text-muted));
+  margin-top: 0.25rem;
+}
+[data-flwr] .tpl-faq_link {
   color: inherit;
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-}
-[data-flwr] .tpl-faq-section .home-faq_list .flwr_accordion_item.is-active .flwr_accordion_content .n58-faq-list,
-[data-flwr] .tpl-faq-section .home-faq_list .flwr_accordion_item.is-active .flwr_accordion_content .n58-faq-list li {
-  color: color-mix(in oklch, var(--_palette---neutral--900) 82%, transparent);
 }
 
 /* ══════════════ RESPONSIVE ══════════════ */
 @media (max-width: 991px) {
   .tpl-hero { grid-template-columns: minmax(0, 1fr); }
   .tpl-hero_media { order: 2; }
-  .tpl-producto.is-hero-split .tpl-hero_text { max-width: 44rem; }
+  [data-flwr] .tpl-hero_text.is-hero-split { max-width: 44rem; }
   .tpl-reqs { grid-template-columns: minmax(0, 1fr); }
   .tpl-reqs_media { order: 2; }
-  .tpl-producto.is-cards-stagger .tpl-feat:nth-child(even) { transform: none; }
-  .tpl-sec-head { margin-bottom: 2.4rem; }
+  [data-flwr] .tpl-feat.is-cards-stagger:nth-child(even) { transform: none; }
+  .tpl-feat { aspect-ratio: auto; min-height: 23rem; }
+  [data-flwr] .tpl-feat_link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .tpl-sec-head { margin-bottom: var(--_spacing---step--7); }
   .tpl-benef_stack {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 3rem;
+    row-gap: var(--_spacing---step--8);
   }
   .tpl-benef_stack_info { align-items: center; text-align: center; }
   .tpl-benef_deck { --_component---card-stack--aspect-ratio: 3 / 2; }
@@ -863,24 +878,27 @@
 @media (max-width: 767px) {
   .tpl-feats,
   .tpl-benef_grid { grid-template-columns: minmax(0, 1fr); }
-  .tpl-producto.is-cards-row .tpl-feat { flex-direction: row; }
-  .tpl-hero_stats { column-gap: 1.8rem; }
-  .tpl-reqs_stat { width: 4.6rem; height: 4.6rem; right: 0; bottom: -0.6rem; }
-  .tpl-reqs_stat-num { font-size: 1.6rem; }
+  [data-flwr] .tpl-feat.is-cards-row { flex-direction: row; }
+  .tpl-feat { aspect-ratio: auto; min-height: 14rem; }
+  [data-flwr] .tpl-feat_link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .tpl-hero_stats { column-gap: var(--_spacing---step--6); }
+  .tpl-reqs_stat { width: calc(4.6rem + var(--_spacing---step--1) * 2); height: calc(4.6rem + var(--_spacing---step--1) * 2); right: 0; bottom: -0.6rem; }
+  .tpl-reqs_stat-num { font-size: var(--_typography---size--h4); }
   /* Hero media shape comes from the ratio-clamp frame in project.css
      (4:3 -> ~16:15 -> 4:5, capped at 72svh), not a per-page override. */
 }
 
 @media (max-width: 478px) {
+  .tpl-feat { aspect-ratio: auto; min-height: 16.5rem; }
   .tpl-feat_front {
-    padding-top: 1.4rem;
-    padding-right: 1.3rem;
-    padding-bottom: 1.4rem;
-    padding-left: 1.3rem;
+    padding-top: var(--_spacing---step--5);
+    padding-right: var(--_spacing---step--5);
+    padding-bottom: var(--_spacing---step--5);
+    padding-left: var(--_spacing---step--5);
   }
   .tpl-hero_stats {
-    column-gap: 1.4rem;
-    row-gap: 0.9rem;
+    column-gap: var(--_spacing---step--5);
+    row-gap: var(--_spacing---step--3);
   }
-  .tpl-stat_num { font-size: 1.5rem; }
+  .tpl-stat_num { font-size: var(--_typography---size--h4); }
 }

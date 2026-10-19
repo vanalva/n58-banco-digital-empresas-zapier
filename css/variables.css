@@ -36,6 +36,7 @@
 
   /* alert — destructive / fraud banner. "--cola-de-langosta" coral #ef5541. */
   --_palette---alert--seed: oklch(0.654 0.193 30.4);
+  --n58-orange: oklch(0.72 0.18 52);  /* footer heart: a true orange (flwr accent-2 is a pale peach) */
 
   /* focus — focus ring + border--focus. flwr defaults this to hue 285 (blue-
      purple) to match its OWN purple alternate; N58's alternate is magenta, so

@@ -1,41 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   N58 FX ticker — live rate hydration (static build)
-   ───────────────────────────────────────────────────────────────────────────
-   The bar ships with placeholder values (Bs. 00,00 / 00/00/0000) so the layout
-   is correct before any data arrives. This script replaces them with live rates.
-
-   Source is declared on the bar:
-
-     data-n58-fx-src="bcv"          built-in BCV provider (default)
-     data-n58-fx-src="https://…"    any endpoint returning JSON — the n8n webhook
-     data-n58-fx-src=""             stay on placeholders
-
-   THE BCV PROVIDER is the temporary path until the site moves into Webflow and
-   the ticker binds to the Tasas CMS collection that n8n already feeds. It reads
-   the two official BCV rates from ve.dolarapi.com, which serves
-   `Access-Control-Allow-Origin: *`, so no proxy is needed:
-
-     https://ve.dolarapi.com/v1/dolares/oficial   → { promedio: 787.5196, … }
-     https://ve.dolarapi.com/v1/euros/oficial     → { promedio: 919.15350114, … }
-
-   Those are the same figures n58bancodigital.com publishes today (787,51960000
-   and 919,15350114 as of 2026-08-26) — same source, same day, no drift.
-
-   CUSTOM ENDPOINT shapes accepted (first match wins, keys case-insensitive):
-     { "usd": 787.5196, "eur": 919.1535, "fecha": "2026-08-26" }
-     { "USD": "787,5196", "EUR": "919,1535", "date": "26/08/2026" }
-     { "rates": { "usd": …, "eur": … }, "updatedAt": "…" }
-     [ { "moneda": "USD", "tasa": … }, { "moneda": "EUR", "tasa": … } ]
-   Values may be numbers or strings; a comma decimal separator is understood.
-
-   Behaviour on failure: placeholders stay exactly as authored. No layout shift,
-   no empty ticker, one console warning so a broken endpoint is findable.
-
-   Why every node, not the first: both marquee implementations CLONE the track —
-   the flwr engine on desktop, the CSS compositor swap on mobile — so a rate can
-   exist 4-12 times in the DOM. Fields are addressed by data attribute and every
-   copy is written, which also makes hydration timing-safe.
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* N58 FX ticker: temporary browser provider before Webflow Tasas CMS binding.
+ * data-n58-fx-src="bcv" (or omitted): public official-rate provider.
+ * data-n58-fx-src="https://...": read-only JSON endpoint.
+ * data-n58-fx-src="": disabled; no request.
+ * Both positive rates and a valid publication date are required. Failure shows
+ * an unavailable message, never zero rates. Data is rendered as text only.
+ * Validated values are repainted after marquee clones/rebuilds without refetching.
+ */
 (function () {
   'use strict';
 
@@ -44,17 +14,14 @@
     eur: 'https://ve.dolarapi.com/v1/euros/oficial'
   };
   var CACHE_KEY = 'n58-fx-cache';
-  var CACHE_MS = 30 * 60 * 1000;   // half an hour; BCV publishes once a day
+  var CACHE_MS = 30 * 60 * 1000;
   var TIMEOUT_MS = 6000;
-
   var bars = document.querySelectorAll('[data-n58-fx]');
   if (!bars.length) return;
 
-  /* ── helpers ───────────────────────────────────────────────────────────── */
-
   function pick(obj, keys) {
     if (!obj || typeof obj !== 'object') return undefined;
-    var lower = {};
+    var lower = Object.create(null);
     Object.keys(obj).forEach(function (k) { lower[k.toLowerCase()] = obj[k]; });
     for (var i = 0; i < keys.length; i++) {
       var v = lower[keys[i]];
@@ -64,14 +31,13 @@
   }
 
   function toNumber(v) {
-    if (typeof v === 'number') return isFinite(v) ? v : null;
-    if (typeof v !== 'string') return null;
-    // "787,51960000" and "787.5196" mean the same thing here.
-    var s = v.trim().replace(/\s/g, '');
-    if (s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g, '');
-    s = s.replace(',', '.');
-    var n = parseFloat(s);
-    return isFinite(n) ? n : null;
+    if (typeof v === 'string') {
+      var s = v.trim();
+      if (/^\d{1,3}(?:\.\d{3})+,\d+$/.test(s)) s = s.replace(/\./g, '');
+      else if (!/^\d+(?:[.,]\d+)?$/.test(s)) return null;
+      v = Number(s.replace(',', '.'));
+    }
+    return typeof v === 'number' && isFinite(v) && v > 0 && v <= 9007199254740991 ? v : null;
   }
 
   function money(n) {
@@ -79,11 +45,28 @@
   }
 
   function day(v) {
-    if (!v) return null;
-    var d = new Date(v);
-    if (isNaN(d.getTime())) return typeof v === 'string' ? v : null;
-    var p = function (x) { return (x < 10 ? '0' : '') + x; };
-    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
+    if (typeof v !== 'string') return null;
+    var iso = v.match(/^(\d{4})-(\d{2})-(\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))?$/);
+    var local = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!iso && !local) return null;
+    if (iso && v.indexOf('T') > -1 && !isFinite(Date.parse(v))) return null;
+    var y = Number(iso ? iso[1] : local[3]);
+    var m = Number(iso ? iso[2] : local[2]);
+    var d = Number(iso ? iso[3] : local[1]);
+    var date = new Date(Date.UTC(y, m - 1, d));
+    if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null;
+    var now = new Date();
+    if (date.getTime() > Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) return null;
+    // Keep the provider's publication day, independent of the visitor's timezone.
+    var pad = function (n) { return n < 10 ? '0' + n : String(n); };
+    return pad(d) + '/' + pad(m) + '/' + y;
+  }
+
+  function validate(v) {
+    if (!v || typeof v !== 'object') throw new Error('Incomplete rate response');
+    var out = { usd: toNumber(v.usd), eur: toNumber(v.eur), fecha: day(v.fecha) };
+    if (out.usd === null || out.eur === null || !out.fecha) throw new Error('Invalid or incomplete rate response');
+    return out;
   }
 
   function getJSON(url) {
@@ -92,112 +75,137 @@
     var opts = { cache: 'no-store', credentials: 'omit' };
     if (ctrl) opts.signal = ctrl.signal;
     return fetch(url, opts).then(function (r) {
-      if (timer) clearTimeout(timer);
-      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
+      if (!r.ok) throw new Error('Rate request failed (HTTP ' + r.status + ')');
       return r.json();
+    }).then(function (value) {
+      if (timer) clearTimeout(timer);
+      return value;
+    }, function (err) {
+      if (timer) clearTimeout(timer);
+      throw err;
     });
   }
 
-  /* ── sources ───────────────────────────────────────────────────────────── */
-
-  // ve.dolarapi: { moneda, fuente, promedio, fechaActualizacion }
   function fromBcv() {
-    var soft = function (url) { return getJSON(url).catch(function () { return null; }); };
-    return Promise.all([soft(BCV.usd), soft(BCV.eur)]).then(function (res) {
+    return Promise.all([getJSON(BCV.usd), getJSON(BCV.eur)]).then(function (res) {
       var usd = res[0], eur = res[1];
-      if (!usd && !eur) throw new Error('BCV unreachable');
-      return {
-        usd: usd ? toNumber(pick(usd, ['promedio', 'venta', 'compra'])) : null,
-        eur: eur ? toNumber(pick(eur, ['promedio', 'venta', 'compra'])) : null,
-        fecha: day(pick(usd || eur || {}, ['fechaactualizacion', 'fecha']))
-      };
+      if (String(pick(usd, ['moneda'])).toUpperCase() !== 'USD' ||
+          String(pick(eur, ['moneda'])).toUpperCase() !== 'EUR' ||
+          pick(usd, ['fuente']) !== 'oficial' || pick(eur, ['fuente']) !== 'oficial') {
+        throw new Error('Unexpected rate provider response');
+      }
+      var usdDay = day(pick(usd, ['fechaactualizacion', 'fecha']));
+      var eurDay = day(pick(eur, ['fechaactualizacion', 'fecha']));
+      if (!usdDay || usdDay !== eurDay) throw new Error('Currency publication dates do not match');
+      return validate({
+        usd: pick(usd, ['promedio', 'venta', 'compra']),
+        eur: pick(eur, ['promedio', 'venta', 'compra']),
+        fecha: usdDay
+      });
     });
   }
 
   function fromCustom(data) {
     var out = {}, src = data;
-
     if (Array.isArray(data)) {
       data.forEach(function (row) {
         var code = String(pick(row, ['moneda', 'currency', 'code', 'divisa']) || '').toUpperCase();
-        var rate = pick(row, ['tasa', 'rate', 'valor', 'value', 'precio', 'promedio']);
-        if (code.indexOf('USD') > -1 || code.indexOf('DOLAR') > -1) out.usd = toNumber(rate);
-        if (code.indexOf('EUR') > -1) out.eur = toNumber(rate);
-        if (!out.fecha) out.fecha = day(pick(row, ['fecha', 'date', 'updatedat', 'fechaactualizacion']));
+        var field = /^(USD|DOLAR|DÓLAR)$/.test(code) ? 'usd' : /^(EUR|EURO)$/.test(code) ? 'eur' : null;
+        if (!field) return;
+        if (out[field] !== undefined) throw new Error('Duplicate currency in rate response');
+        out[field] = pick(row, ['tasa', 'rate', 'valor', 'value', 'precio', 'promedio']);
+        var rowDay = day(pick(row, ['fecha', 'date', 'updatedat', 'updated_at', 'fechaactualizacion']));
+        if (!rowDay || (out.fecha && out.fecha !== rowDay)) throw new Error('Currency publication dates do not match');
+        out.fecha = rowDay;
       });
-      return out;
+      return validate(out);
     }
-
     var nested = pick(data, ['rates', 'tasas', 'data', 'result']);
     if (nested && typeof nested === 'object' && !Array.isArray(nested)) src = nested;
-
-    out.usd = toNumber(pick(src, ['usd', 'dolar', 'dólar', 'cambio_usd', 'cambiousd', 'promedio']));
-    out.eur = toNumber(pick(src, ['eur', 'euro', 'cambio_eur', 'cambioeur']));
-    out.fecha = day(pick(src, ['fecha', 'date', 'updatedat', 'updated_at', 'fechaactualizacion'])) ||
-                day(pick(data, ['fecha', 'date', 'updatedat', 'updated_at']));
-    return out;
+    out.usd = pick(src, ['usd', 'dolar', 'dólar', 'cambio_usd', 'cambiousd', 'promedio']);
+    out.eur = pick(src, ['eur', 'euro', 'cambio_eur', 'cambioeur']);
+    var dateKeys = ['fecha', 'date', 'updatedat', 'updated_at', 'fechaactualizacion'];
+    var suppliedDate = pick(src, dateKeys);
+    out.fecha = suppliedDate !== undefined ? suppliedDate : pick(data, dateKeys);
+    return validate(out);
   }
-
-  /* ── cache: one fetch per half hour per browser ────────────────────────── */
 
   function readCache(key) {
     try {
       var raw = sessionStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       var c = JSON.parse(raw);
-      if (c.key !== key || (Date.now() - c.at) > CACHE_MS) return null;
-      return c.value;
+      if (!c || c.key !== key || typeof c.at !== 'number' || !isFinite(c.at)) return null;
+      var age = Date.now() - c.at;
+      if (age < 0 || age > CACHE_MS) return null;
+      return validate(c.value);
     } catch (e) { return null; }
   }
 
   function writeCache(key, value) {
-    try {
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ key: key, at: Date.now(), value: value }));
-    } catch (e) { /* private mode — refetching is fine */ }
+    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ key: key, at: Date.now(), value: value })); }
+    catch (e) { /* Storage is optional; the validated display still works. */ }
   }
-
-  /* ── paint ─────────────────────────────────────────────────────────────── */
 
   function write(bar, field, text) {
-    if (text === null || text === undefined) return 0;
     var nodes = bar.querySelectorAll('[data-n58-fx-field="' + field + '"]');
     for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
-    return nodes.length;
   }
 
-  function paint(bar, v) {
-    var wrote = 0;
-    if (v.usd !== null && v.usd !== undefined) wrote += write(bar, 'usd', money(v.usd));
-    if (v.eur !== null && v.eur !== undefined) wrote += write(bar, 'eur', money(v.eur));
-    if (v.fecha) wrote += write(bar, 'fecha', v.fecha);
-    bar.setAttribute('data-n58-fx-state', wrote ? 'live' : 'placeholder');
-    return wrote;
+  function paint(bar, value, state) {
+    write(bar, 'usd', value ? money(value.usd) : state === 'loading' ? 'Consultando…' : 'No disponible');
+    write(bar, 'eur', value ? money(value.eur) : state === 'loading' ? 'Consultando…' : 'No disponible');
+    write(bar, 'fecha', value ? value.fecha : '—');
+    bar.setAttribute('data-n58-fx-state', value ? 'live' : state);
   }
 
   function hydrate(bar) {
-    var src = (bar.getAttribute('data-n58-fx-src') || 'bcv').trim();
-    if (!src) return;                       // explicitly disabled
-
+    var value = null, state = 'loading';
+    function render() { paint(bar, value, state); }
+    // Mobile page scripts rebuild from their original HTML. Repaint only when
+    // element nodes containing FX fields appear; text writes do not retrigger us.
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          var added = records[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var node = added[j];
+            if (node.nodeType === 1 && (node.matches('[data-n58-fx-field]') || node.querySelector('[data-n58-fx-field]'))) {
+              render();
+              return;
+            }
+          }
+        }
+      }).observe(bar, { childList: true, subtree: true });
+    }
+    var attribute = bar.getAttribute('data-n58-fx-src');
+    var src = attribute === null ? 'bcv' : attribute.trim();
+    if (!src) { state = 'disabled'; render(); return; }
+    render();
     var cached = readCache(src);
-    if (cached) { paint(bar, cached); return; }
-
-    var load = (src === 'bcv')
-      ? fromBcv()
-      : getJSON(src).then(fromCustom);
-
+    if (cached) { value = cached; render(); return; }
+    var load;
+    if (src === 'bcv') load = fromBcv();
+    else {
+      try {
+        var url = new URL(src, document.baseURI);
+        if (url.protocol !== 'https:' || url.username || url.password) throw new Error('Invalid rate endpoint');
+        load = getJSON(url.href).then(fromCustom);
+      } catch (e) { load = Promise.reject(e); }
+    }
     load.then(function (v) {
-      if (paint(bar, v)) writeCache(src, v);
-    }).catch(function (err) {
-      if (window.console && console.warn) console.warn('[n58-fx] rates unavailable:', err.message);
-      bar.setAttribute('data-n58-fx-state', 'placeholder');
+      value = validate(v);
+      render();
+      writeCache(src, value);
+    }).catch(function () {
+      state = 'unavailable';
+      render();
+      // Never log endpoint URLs, query tokens, or response content.
+      if (window.console && console.warn) console.warn('[n58-fx] rates unavailable');
     });
   }
 
-  function run() {
-    for (var i = 0; i < bars.length; i++) hydrate(bars[i]);
-  }
-
-  // Late enough that both marquee implementations have finished cloning.
+  function run() { for (var i = 0; i < bars.length; i++) hydrate(bars[i]); }
   if (document.readyState === 'complete') run();
   else window.addEventListener('load', run);
 })();

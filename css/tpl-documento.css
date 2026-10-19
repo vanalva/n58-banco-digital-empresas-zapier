@@ -56,13 +56,13 @@
 .tpl-doc-pdf-viewer {
   min-height: 44rem;
   overflow: hidden;
-  border-top-left-radius: var(--_component---card--radius);
-  border-top-right-radius: var(--_component---card--radius);
-  border-bottom-right-radius: var(--_component---card--radius);
-  border-bottom-left-radius: var(--_component---card--radius);
+  border-top-left-radius: var(--_radius---panel);
+  border-top-right-radius: var(--_radius---panel);
+  border-bottom-right-radius: var(--_radius---panel);
+  border-bottom-left-radius: var(--_radius---panel);
   background-color: var(--_palette---neutral--100);
 }
-.tpl-doc-pdf-viewer iframe { width: 100%; height: 44rem; border-width: 0; }
+[data-flwr] .tpl-doc-pdf-frame { width: 100%; height: 44rem; border-width: 0; }
 .tpl-doc-pdf-summary {
   position: sticky;
   top: 7rem;
@@ -78,27 +78,27 @@
 }
 .tpl-doc-pdf-meta {
   display: grid;
-  row-gap: 0.75rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
+  row-gap: var(--_spacing---step--2);
+  margin-top: var(--_spacing---step--5);
+  margin-bottom: var(--_spacing---step--5);
 }
-.tpl-doc-pdf-meta div {
+[data-flwr] .tpl-doc-pdf-meta_row {
   display: flex;
   justify-content: space-between;
-  column-gap: 1rem;
+  column-gap: var(--_spacing---step--3);
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: var(--_theme---border);
-  padding-bottom: 0.75rem;
+  padding-bottom: var(--_spacing---step--2);
 }
-.tpl-doc-pdf-meta dt { color: var(--_theme---text--muted); }
-.tpl-doc-pdf-meta dd { font-weight: 700; text-align: right; }
+[data-flwr] .tpl-doc-pdf-meta_term { color: var(--_section---text-muted); }
+[data-flwr] .tpl-doc-pdf-meta_def { font-weight: 700; text-align: right; }
 @media (max-width: 991px) {
   .tpl-doc-pdf-grid { grid-template-columns: 1fr; }
   .tpl-doc-pdf-summary { position: static; }
 }
 @media (max-width: 767px) {
-  .tpl-doc-pdf-viewer, .tpl-doc-pdf-viewer iframe { min-height: 32rem; height: 32rem; }
+  .tpl-doc-pdf-viewer, [data-flwr] .tpl-doc-pdf-frame { min-height: 32rem; height: 32rem; }
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@
    were landing at ~10%% opacity and reading as disabled. Same keyframes and
    cadence as the home hero, so the motion language does not change. */
 @media (prefers-reduced-motion: no-preference) {
-  [data-flwr] .tpl-doc-hero .n58-reveal-stack > * {
+  [data-flwr] .tpl-doc-hero_item {
     animation-name: n58-hero-in;
     animation-timeline: auto;
     animation-range: normal;
@@ -125,9 +125,9 @@
     animation-fill-mode: both;
     animation-delay: 0.08s;
   }
-  [data-flwr] .tpl-doc-hero .n58-reveal-stack > *:nth-child(2)   { animation-delay: 0.2s; }
-  [data-flwr] .tpl-doc-hero .n58-reveal-stack > *:nth-child(3)   { animation-delay: 0.32s; }
-  [data-flwr] .tpl-doc-hero .n58-reveal-stack > *:nth-child(n+4) { animation-delay: 0.44s; }
+  [data-flwr] .tpl-doc-hero_item--2   { animation-delay: 0.2s; }
+  [data-flwr] .tpl-doc-hero_item--3   { animation-delay: 0.32s; }
+  [data-flwr] .tpl-doc-hero_item--4 { animation-delay: 0.44s; }
 }
 
 /* The TOC rail has the same problem the article had: n58-reveal scrubs on a
@@ -146,7 +146,7 @@
   }
 }
 
-.tpl-doc-hero .n58-spline {
+[data-flwr] .n58-spline.tpl-doc-hero_spline {
   /* Shorter than the split-hero default (78vh): the hero copy reveals on a
      view() timeline, so anything pushed below the fold at load reads washed
      out until you scroll — which is what happened to the two CTAs. */
@@ -237,17 +237,17 @@
   row-gap: var(--_spacing---step--5);
   align-items: start;
 }
-.tpl-documento.is-toc-sidebar .tpl-doc-layout {
+[data-flwr] .tpl-doc-layout.is-toc-sidebar {
   grid-template-columns: var(--tpl-toc-w) minmax(0, 1fr);
 }
 
 /* ── Table of contents (single markup; variants reposition it) ── */
 .tpl-doc-toc {
   box-sizing: border-box;
-  border-top-left-radius: var(--_component---card--radius);
-  border-top-right-radius: var(--_component---card--radius);
-  border-bottom-left-radius: var(--_component---card--radius);
-  border-bottom-right-radius: var(--_component---card--radius);
+  border-top-left-radius: var(--_radius---panel);
+  border-top-right-radius: var(--_radius---panel);
+  border-bottom-left-radius: var(--_radius---panel);
+  border-bottom-right-radius: var(--_radius---panel);
   border-top-width: 1px;
   border-right-width: 1px;
   border-bottom-width: 1px;
@@ -256,11 +256,11 @@
   border-right-style: solid;
   border-bottom-style: solid;
   border-left-style: solid;
-  border-top-color: var(--_theme---border--subtle);
-  border-right-color: var(--_theme---border--subtle);
-  border-bottom-color: var(--_theme---border--subtle);
-  border-left-color: var(--_theme---border--subtle);
-  background-color: var(--_theme---surface--raised);
+  border-top-color: var(--_section---border-subtle);
+  border-right-color: var(--_section---border-subtle);
+  border-bottom-color: var(--_section---border-subtle);
+  border-left-color: var(--_section---border-subtle);
+  background-color: var(--_section---surface-raised);
 }
 .tpl-doc-toc_summary {
   display: flex;
@@ -278,24 +278,24 @@
 }
 .tpl-doc-toc_summary::-webkit-details-marker { display: none; }
 .tpl-doc-toc_title {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--_typography---size--tiny);
+  font-weight: var(--_typography---weight--bold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--_theme---text--muted);
+  color: var(--_section---text-muted);
 }
 .tpl-doc-toc_chev {
   width: 1rem;
   height: 1rem;
   flex-grow: 0;
   flex-shrink: 0;
-  color: var(--_theme---text--muted);
+  color: var(--_section---text-muted);
+  transform: var(--tpl-doc-chev-t, none);
   transition-property: transform;
   transition-duration: 240ms;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: 0s;
 }
-.tpl-doc-toc[open] .tpl-doc-toc_chev { transform: rotate(180deg); }
 
 .tpl-doc-toc_nav {
   padding-top: var(--_spacing---step--1);
@@ -320,51 +320,51 @@
 .tpl-doc-toc_item { display: block; }
 .tpl-doc-toc_link {
   display: block;
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
-  padding-left: 0.75rem;
-  padding-right: 0.5rem;
+  padding-top: var(--_spacing---step--1);
+  padding-bottom: var(--_spacing---step--1);
+  padding-left: var(--_spacing---step--2);
+  padding-right: var(--_spacing---step--2);
   border-left-width: 2px;
   border-left-style: solid;
-  border-left-color: var(--_theme---border--subtle);
-  font-size: 0.9rem;
+  border-left-color: var(--_section---border-subtle);
+  font-size: var(--_typography---size--small);
   line-height: 1.35;
   text-decoration-line: none;
-  color: var(--_theme---text--muted);
+  color: var(--_section---text-muted);
   transition-property: color, border-left-color, background-color;
   transition-duration: 180ms;
   transition-timing-function: ease;
   transition-delay: 0s;
 }
 .tpl-doc-toc_link:hover {
-  color: var(--_theme---text--strong);
+  color: var(--_section---text-strong);
   border-left-color: var(--tpl-accent);
 }
 /* sub-level (h3) entries indent a notch */
-.tpl-doc-toc_item.is-sub .tpl-doc-toc_link {
-  padding-left: 1.5rem;
-  font-size: 0.82rem;
-  color: var(--_theme---text--subtle);
+[data-flwr] .tpl-doc-toc_link.tpl-doc-toc_link--sub {
+  padding-left: var(--_spacing---step--5);
+  font-size: var(--_typography---size--small);
+  color: var(--_section---text-subtle);
 }
 /* scroll-spy active state (set by the scoped script) */
 .tpl-doc-toc_link.is-active {
-  color: var(--_theme---text--strong);
+  color: var(--_section---text-strong);
   border-left-color: var(--tpl-accent);
-  background-color: var(--_theme---surface--sunken);
+  background-color: var(--_section---surface-sunken);
 }
 
 /* ── Variant: SIDEBAR (sticky rail, summary hidden on desktop) ── */
-.tpl-documento.is-toc-sidebar .tpl-doc-toc {
+[data-flwr] .tpl-doc-toc.is-toc-sidebar {
   position: sticky;
   top: var(--tpl-navoffset);
   max-height: calc(100svh - var(--tpl-navoffset) - 1.5rem);
   overflow-x: hidden;
   overflow-y: auto;
 }
-.tpl-documento.is-toc-sidebar .tpl-doc-toc_summary { display: none; }
+[data-flwr] .tpl-doc-toc_summary.is-toc-sidebar { display: none; }
 
 /* ── Variant: TOP (collapsible bar above the prose) ── */
-.tpl-documento.is-toc-top .tpl-doc-toc {
+[data-flwr] .tpl-doc-toc.is-toc-top {
   position: static;
   max-width: var(--tpl-measure);
   margin-left: auto;
@@ -372,54 +372,40 @@
 }
 
 /* ── Variant: OFF (no TOC at all) ── */
-.tpl-documento.is-toc-off .tpl-doc-toc { display: none; }
+[data-flwr] .tpl-doc-toc.is-toc-off { display: none; }
 
 /* ───────────────────────────────────────────────────────────────────────────
    03 · RICH-TEXT PROSE  (semantic bare tags, styled like a CMS Rich Text field)
    Reading measure via --tpl-measure; centred in its column. ────────────────── */
 .tpl-doc-prose {
+  width: 100%;
+  min-width: 0;
   max-width: var(--tpl-measure);
   margin-left: auto;
   margin-right: auto;
   counter-reset: tpl-sec;
 }
 /* Give the prose room in TOC-off / TOC-top single-column layouts too. */
-.tpl-documento.is-toc-sidebar .tpl-doc-prose {
+[data-flwr] .tpl-doc-prose.is-toc-sidebar {
   margin-left: 0;
   margin-right: auto;
 }
 
-.tpl-doc-prose > * {
+[data-flwr] .tpl-doc_block {
   scroll-margin-top: var(--tpl-navoffset);
 }
 
-/* Lead / intro paragraph with optional drop-cap. */
+/* Lead / intro paragraph. */
 .tpl-doc-lead {
   margin-top: 0;
   margin-bottom: var(--_spacing---step--4);
   font-size: 1.2rem;
   line-height: 1.55;
-  color: var(--_theme---text--main);
-}
-.tpl-doc-lead.has-dropcap::first-letter {
-  float: left;
-  margin-top: 0.06em;
-  margin-right: 0.09em;
-  margin-bottom: 0;
-  margin-left: 0;
-  padding-top: 0.02em;
-  padding-bottom: 0.02em;
-  padding-left: 0;
-  padding-right: 0;
-  font-family: var(--_typography---family--display);
-  font-size: 3.4em;
-  font-weight: 800;
-  line-height: 0.72;
-  color: var(--tpl-accent);
+  color: var(--_section---text);
 }
 
 /* Section headings (h2 = numbered chapter). */
-.tpl-doc-prose h2 {
+[data-flwr] .tpl-doc_h2 {
   counter-increment: tpl-sec;
   position: relative;
   margin-top: var(--_spacing---step--6);
@@ -430,78 +416,87 @@
   padding-right: 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: var(--_theme---border--subtle);
+  border-bottom-color: var(--_section---border-subtle);
   font-family: var(--_typography---family--display);
-  font-size: 1.85rem;
-  font-weight: 800;
+  font-size: var(--_typography---size--h4);
+  font-weight: var(--_typography---weight--extrabold);
   line-height: 1.1;
-  color: var(--_theme---text--strong);
+  color: var(--_section---text-strong);
 }
-.tpl-doc-prose h2::before {
+[data-flwr] .tpl-doc_h2::before {
   content: counter(tpl-sec, decimal-leading-zero);
   display: inline-block;
-  margin-right: 0.6rem;
+  margin-right: var(--_spacing---step--2);
   font-size: 0.72em;
-  font-weight: 700;
+  font-weight: var(--_typography---weight--bold);
   color: var(--tpl-accent);
 }
-.tpl-doc-prose h3 {
+[data-flwr] .tpl-doc_h3 {
   margin-top: var(--_spacing---step--5);
   margin-bottom: var(--_spacing---step--2);
   font-family: var(--_typography---family--display);
   font-size: 1.3rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--_theme---text--strong);
+  font-weight: var(--_typography---weight--bold);
+  line-height: var(--_typography---leading--ui);
+  color: var(--_section---text-strong);
 }
-.tpl-doc-prose h4 {
+[data-flwr] .tpl-doc_h4 {
   margin-top: var(--_spacing---step--4);
   margin-bottom: var(--_spacing---step--1);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--_typography---weight--bold);
   letter-spacing: 0.01em;
   color: var(--tpl-accent);
 }
-.tpl-doc-prose p {
+[data-flwr] .tpl-doc_p {
   margin-top: 0;
   margin-bottom: var(--_spacing---step--3);
-  font-size: 1.02rem;
+  font-size: var(--_typography---size--body);
   line-height: 1.72;
-  color: var(--_theme---text--main);
+  color: var(--_section---text);
 }
-.tpl-doc-prose strong { color: var(--_theme---text--strong); font-weight: 700; }
-.tpl-doc-prose em { font-style: italic; }
-.tpl-doc-prose a {
+/* p that carries its own text-size/colour utilities (download card): only the rhythm comes from the prose rule */
+[data-flwr] .tpl-doc_p-m {
+  margin-top: 0;
+  margin-bottom: var(--_spacing---step--3);
+}
+[data-flwr] .tpl-doc_strong { color: var(--_section---text-strong); font-weight: 700; }
+[data-flwr] .tpl-doc_em { font-style: italic; }
+[data-flwr] .tpl-doc_a {
   color: var(--tpl-accent);
   text-decoration-line: underline;
   text-decoration-color: color-mix(in srgb, var(--tpl-accent) 45%, transparent);
   text-decoration-style: solid;
   text-underline-offset: 0.16em;
 }
-.tpl-doc-prose a:hover {
+[data-flwr] .tpl-doc_a:hover {
   text-decoration-color: var(--tpl-accent);
 }
+/* button anchors inside the prose: the button rules win the colour/decoration, only the underline offset is the prose one */
+[data-flwr] .tpl-doc_a--btn {
+  text-underline-offset: 0.16em;
+}
+[data-flwr] .tpl-doc_a--btn:hover { text-decoration-color: var(--tpl-accent); }
 
 /* Lists. */
-.tpl-doc-prose ul,
-.tpl-doc-prose ol {
+[data-flwr] .tpl-doc_list {
   margin-top: 0;
   margin-bottom: var(--_spacing---step--3);
-  padding-left: 1.4rem;
-  color: var(--_theme---text--main);
+  padding-left: var(--_spacing---step--4);
+  color: var(--_section---text);
 }
-.tpl-doc-prose li {
+[data-flwr] .tpl-doc_li {
   margin-top: 0;
-  margin-bottom: 0.6rem;
-  font-size: 1.02rem;
+  margin-bottom: var(--_spacing---step--2);
+  font-size: var(--_typography---size--body);
   line-height: 1.65;
 }
-.tpl-doc-prose ul { list-style-type: none; }
-.tpl-doc-prose ul > li {
+[data-flwr] .tpl-doc_ul { list-style-type: none; }
+[data-flwr] .tpl-doc_li-ul {
   position: relative;
-  padding-left: 0.4rem;
+  padding-left: var(--_spacing---step--1);
 }
-.tpl-doc-prose ul > li::before {
+[data-flwr] .tpl-doc_li-ul::before {
   content: "";
   position: absolute;
   top: 0.65em;
@@ -515,25 +510,25 @@
   background-color: var(--tpl-accent);
   transform: rotate(45deg);
 }
-.tpl-doc-prose ol {
+[data-flwr] .tpl-doc_ol {
   list-style-type: decimal;
   list-style-position: outside;
 }
-.tpl-doc-prose ol > li::marker {
+[data-flwr] .tpl-doc_li-ol::marker {
   color: var(--tpl-accent);
-  font-weight: 700;
+  font-weight: var(--_typography---weight--bold);
 }
 
 /* Definition rows — <strong> term leading a paragraph. */
 .tpl-doc-def {
-  padding-left: 1rem;
+  padding-left: var(--_spacing---step--3);
   border-left-width: 2px;
   border-left-style: solid;
-  border-left-color: var(--_theme---border--subtle);
+  border-left-color: var(--_section---border-subtle);
 }
 
 /* Blockquote / legal callout. */
-.tpl-doc-prose blockquote {
+[data-flwr] .tpl-doc_quote {
   margin-top: var(--_spacing---step--4);
   margin-bottom: var(--_spacing---step--4);
   margin-left: 0;
@@ -549,13 +544,13 @@
   border-left-width: 3px;
   border-left-style: solid;
   border-left-color: var(--tpl-accent);
-  background-color: color-mix(in srgb, var(--tpl-accent) 8%, var(--_theme---surface--raised));
+  background-color: color-mix(in srgb, var(--tpl-accent) 8%, var(--_section---surface-raised));
 }
-.tpl-doc-prose blockquote p:last-child { margin-bottom: 0; }
-.tpl-doc-prose blockquote p {
-  font-size: 1.05rem;
+[data-flwr] .tpl-doc_quote-p--last { margin-bottom: 0; }
+[data-flwr] .tpl-doc_quote-p {
+  font-size: var(--_typography---size--body);
   line-height: 1.6;
-  color: var(--_theme---text--main);
+  color: var(--_section---text);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -567,19 +562,19 @@
 }
 .tpl-doc-table-caption {
   margin-top: 0;
-  margin-bottom: 0.6rem;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--_theme---text--strong);
+  margin-bottom: var(--_spacing---step--2);
+  font-size: var(--_typography---size--small);
+  font-weight: var(--_typography---weight--bold);
+  color: var(--_section---text-strong);
 }
 .tpl-doc-table-wrap {
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
-  border-top-left-radius: var(--_component---card--radius);
-  border-top-right-radius: var(--_component---card--radius);
-  border-bottom-left-radius: var(--_component---card--radius);
-  border-bottom-right-radius: var(--_component---card--radius);
+  border-top-left-radius: var(--_radius---panel);
+  border-top-right-radius: var(--_radius---panel);
+  border-bottom-left-radius: var(--_radius---panel);
+  border-bottom-right-radius: var(--_radius---panel);
   border-top-width: 1px;
   border-right-width: 1px;
   border-bottom-width: 1px;
@@ -588,10 +583,10 @@
   border-right-style: solid;
   border-bottom-style: solid;
   border-left-style: solid;
-  border-top-color: var(--_theme---border--subtle);
-  border-right-color: var(--_theme---border--subtle);
-  border-bottom-color: var(--_theme---border--subtle);
-  border-left-color: var(--_theme---border--subtle);
+  border-top-color: var(--_section---border-subtle);
+  border-right-color: var(--_section---border-subtle);
+  border-bottom-color: var(--_section---border-subtle);
+  border-left-color: var(--_section---border-subtle);
   -webkit-overflow-scrolling: touch;
 }
 .tpl-doc-table-wrap:focus-visible {
@@ -600,50 +595,51 @@
   outline-color: var(--tpl-accent);
   outline-offset: 2px;
 }
-.tpl-doc-prose table {
+[data-flwr] .tpl-doc_table {
   width: 100%;
-  min-width: 34rem;
+  min-width: 0;
   border-collapse: collapse;
   border-spacing: 0;
-  font-size: 0.95rem;
+  font-size: var(--_typography---size--small);
 }
-.tpl-doc-prose thead th {
+[data-flwr] .tpl-doc_th {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-top: var(--_spacing---step--2);
+  padding-bottom: var(--_spacing---step--2);
+  padding-left: var(--_spacing---step--3);
+  padding-right: var(--_spacing---step--3);
   border-bottom-width: 2px;
   border-bottom-style: solid;
   border-bottom-color: var(--tpl-accent);
-  background-color: var(--_theme---surface--sunken);
-  color: var(--_theme---text--strong);
-  font-weight: 700;
+  background-color: var(--_section---surface-sunken);
+  color: var(--_section---text-strong);
+  font-weight: var(--_typography---weight--bold);
   text-align: left;
   vertical-align: bottom;
 }
-.tpl-doc-prose tbody td {
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+[data-flwr] .tpl-doc_td {
+  padding-top: var(--_spacing---step--2);
+  padding-bottom: var(--_spacing---step--2);
+  padding-left: var(--_spacing---step--3);
+  padding-right: var(--_spacing---step--3);
   border-top-width: 1px;
   border-top-style: solid;
-  border-top-color: var(--_theme---border--subtle);
-  color: var(--_theme---text--main);
+  border-top-color: var(--_section---border-subtle);
+  color: var(--_section---text);
   line-height: 1.45;
   vertical-align: top;
 }
-.tpl-doc-prose tbody tr:nth-child(even) td {
-  background-color: var(--_theme---surface--raised);
+[data-flwr] .tpl-doc_td--even {
+  background-color: var(--_section---surface-raised);
 }
 /* the numeric / last column reads as the "value" — nudge it strong + right */
-.tpl-doc-prose tbody td:last-child {
-  color: var(--_theme---text--strong);
-  font-weight: 600;
-  white-space: nowrap;
+[data-flwr] .tpl-doc_td--last {
+  color: var(--_section---text-strong);
+  font-weight: var(--_typography---weight--semibold);
+  /* long conditions ("Mínimo 3% y máximo 3,80% del monto…") wrap; short figures keep a floor so they never collapse */
+  min-width: 6rem;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -677,12 +673,12 @@
   border-right-color: color-mix(in srgb, var(--tpl-accent) 35%, transparent);
   border-bottom-color: color-mix(in srgb, var(--tpl-accent) 35%, transparent);
   border-left-color: color-mix(in srgb, var(--tpl-accent) 35%, transparent);
-  background-color: color-mix(in srgb, var(--tpl-accent) 7%, var(--_theme---surface--raised));
+  background-color: color-mix(in srgb, var(--tpl-accent) 7%, var(--_section---surface-raised));
 }
 .tpl-doc-download_text {
   display: flex;
   flex-direction: column;
-  row-gap: 0.35rem;
+  row-gap: var(--_spacing---step--1);
   max-width: 40ch;
 }
 .tpl-doc-download_ico {
@@ -726,7 +722,7 @@
   border-right-color: var(--tpl-accent);
   border-bottom-color: var(--tpl-accent);
   border-left-color: var(--tpl-accent);
-  background-color: var(--_theme---surface--main);
+  background-color: var(--_section---surface);
   color: var(--tpl-accent);
   cursor: pointer;
   opacity: 0;
@@ -756,35 +752,37 @@
    ─────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 991px) {
   /* Sidebar collapses to a stacked, collapsible TOC above the prose. */
-  .tpl-documento.is-toc-sidebar .tpl-doc-layout {
+  [data-flwr] .tpl-doc-layout.is-toc-sidebar {
     grid-template-columns: minmax(0, 1fr);
   }
-  .tpl-documento.is-toc-sidebar .tpl-doc-toc {
+  [data-flwr] .tpl-doc-toc.is-toc-sidebar {
     position: static;
     max-height: none;
     max-width: var(--tpl-measure);
     margin-left: auto;
     margin-right: auto;
   }
-  .tpl-documento.is-toc-sidebar .tpl-doc-toc_summary { display: flex; }
-  .tpl-documento.is-toc-sidebar .tpl-doc-prose { margin-left: auto; }
+  [data-flwr] .tpl-doc-toc_summary.is-toc-sidebar { display: flex; }
+  [data-flwr] .tpl-doc-prose.is-toc-sidebar { margin-left: auto; }
 
   .tpl-doc-hero_mark { opacity: 0.1; width: 20rem; }
-  .tpl-doc-prose h2 { font-size: 1.6rem; }
+  [data-flwr] .tpl-doc_h2 { font-size: 1.6rem; }
 }
 
 @media (max-width: 767px) {
   .tpl-doc-hero_mark { display: none; }
-  .tpl-doc-prose h2 { font-size: 1.45rem; }
+  /* Square-ish stage on phones: the folder art is the shorter-axis subject, so
+     a tall stage only adds dead space. */
+  [data-flwr] .n58-spline.tpl-doc-hero_spline { height: 100vw; min-height: 20rem; }
+  [data-flwr] .tpl-doc_h2 { font-size: 1.45rem; }
   .tpl-doc-lead { font-size: 1.1rem; }
   .tpl-doc-download { flex-direction: column; align-items: flex-start; }
-  .tpl-doc-totop { right: 1rem; bottom: 5.5rem; }
+  /* fixed circle would sit over body text on phones; native scroll is enough there */
+  .tpl-doc-totop { display: none; }
 }
 
 @media (max-width: 478px) {
-  .tpl-doc-prose h2 { font-size: 1.3rem; }
-  .tpl-doc-lead.has-dropcap::first-letter { font-size: 2.8em; }
-  .tpl-doc-prose table { min-width: 30rem; }
+  [data-flwr] .tpl-doc_h2 { font-size: 1.3rem; }
 }
 
 
@@ -816,7 +814,7 @@
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
 }
-[data-flwr] .tpl-documento.is-toc-sidebar .tpl-doc-toc {
+[data-flwr] .tpl-doc-toc.is-toc-sidebar {
   padding-right: var(--_spacing---step--4);
   border-right-width: var(--_theme---border--width-2);
   border-right-style: solid;
@@ -830,8 +828,8 @@
 /* Section label, same as the reader's group headings. */
 [data-flwr] .tpl-doc-toc_title {
   font-size: var(--_typography---size--tiny);
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-weight: var(--_typography---weight--medium);
+  letter-spacing: var(--_typography---tracking--wider);
   text-transform: uppercase;
   color: color-mix(in oklab, currentColor 55%, transparent);
 }
@@ -860,7 +858,11 @@
   background-color: var(--_palette---core--500);
   color: var(--_palette---neutral--900);
 }
-[data-flwr] .tpl-doc-toc_item.is-sub .tpl-doc-toc_link {
+[data-flwr] .tpl-doc-toc_link.tpl-doc-toc_link--sub {
   padding-left: var(--_spacing---step--5);
   font-size: var(--_typography---size--tiny);
 }
+
+/* ═══ EMBED-ONLY — cannot be styleLess (reason per rule) ═══ */
+/* <details open> is a native/browser attribute: setter for the TOC chevron */
+.tpl-doc-toc[open] { --tpl-doc-chev-t: rotate(180deg); }

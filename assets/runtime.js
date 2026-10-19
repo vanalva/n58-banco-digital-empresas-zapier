@@ -15,12 +15,233 @@
      flwr.cardStack.next(stackEl)
      flwr.cardStack.prev(stackEl)
      flwr.scrollDialog.refresh()                 re-scan DOM for new dialogs
+     flwr.<controller>.init(scope?)             hydrate (idempotent, see below)
+     flwr.<controller>.destroy(scope?)          tear down what init() created
+     flwr.init(scope?)                           every controller, boot order
+     flwr.destroy(scope?)                        every controller, reverse order
 
-   No external dependencies. ~2KB unminified.
+   Lifecycle (v1.2):
+     - init() is idempotent. Each controller remembers the elements it has
+       hydrated (a WeakMap per controller, nothing is written to the DOM) and
+       skips them on the next call, so a CMS re-render or a canvas live-edit
+       can call init() again and only the new markup binds. Controllers that
+       delegate on document/window (cardStack, collapse, cardOverlay's
+       outside-click, scrollDialog's scroll) bind once per scope.
+     - destroy(scope) removes every listener, rAF, timeout and observer the
+       controller created for elements inside scope (all of them when scope
+       is omitted), forgets the ready marks, and undoes the DOM the hydration
+       wrote: marquee clones and text-fill sizing, vertical-text wrappers,
+       list chips and item display, search highlights, Swiper and Leaflet
+       hydration (their own destroy), inline styles and a11y shims (tabindex,
+       role, aria-checked) the runtime added. It deliberately leaves
+       interaction state alone (aria-expanded, aria-selected, hidden panels,
+       data-flwr-state, is-open/is-active, closed banners) so init() after
+       destroy() resumes from where the user was; and it keeps the
+       scroll-dialog fired-once memory (flwr.scrollDialog.reset() clears it).
+       Document/window-level bindings only fall on a full destroy().
+     - Pages that never call destroy() behave exactly as before.
+
+   Size: ~95 KB source, ~40 KB minified, ~12 KB gzipped. 22 controllers run in
+   sequence from init(). Optional peers: Swiper (flwr_swiper_*) and Leaflet
+   (flwr_map_*) are hydrated when present on window; nothing else is required.
+   v1.2: each controller runs through runController() so one failure is
+   logged ([flwr] <name> failed) and the rest still initialize; navbar closes
+   on Escape with focus return; non-native toggles/card-stack/overlay/collapse
+   triggers are keyboard-operable (role=switch, aria-checked, Enter/Space).
+   Not yet provided: a document-level observer for late-rendered (CMS)
+   markup — call flwr.init(newRoot) after inserting it.
    ============================================================================ */
 
 (function () {
   'use strict';
+
+  /* -- lifecycle registry ----------------------------------------------- */
+  /* One registry per controller: `owned` maps a hydrated element (or the
+     scope/window a delegated binding was made on) to its "unit"; a unit
+     holds every listener, rAF, timeout, observer and DOM undo that the
+     hydration created. init() skips owned elements; destroy() kills units
+     and drops their owned entry so a later init() rebuilds from scratch. */
+
+  var registry = {};
+
+  function ctrl(name) {
+    return registry[name] || (registry[name] = { name: name, owned: new WeakMap(), units: [] });
+  }
+
+  function unit(c, owner) {
+    var u = {
+      owner: owner || null,
+      dead: false,
+      _ls: [], _raf: {}, _to: {}, _obs: [], _undo: [], _seen: new WeakMap()
+    };
+    u.on = function (target, type, fn, opts) {
+      target.addEventListener(type, fn, opts);
+      u._ls.push([target, type, fn, opts]);
+      return fn;
+    };
+    u.off = function (target, type, fn, opts) {
+      target.removeEventListener(type, fn, opts);
+      for (var i = u._ls.length - 1; i >= 0; i--) {
+        var l = u._ls[i];
+        if (l[0] === target && l[1] === type && l[2] === fn) { u._ls.splice(i, 1); break; }
+      }
+    };
+    u.raf = function (fn) {
+      var id = requestAnimationFrame(function (ts) { delete u._raf[id]; fn(ts); });
+      u._raf[id] = 1;
+      return id;
+    };
+    u.cancelRaf = function (id) { cancelAnimationFrame(id); delete u._raf[id]; };
+    u.timeout = function (fn, ms) {
+      var id = setTimeout(function () { delete u._to[id]; fn(); }, ms);
+      u._to[id] = 1;
+      return id;
+    };
+    u.clearTimeout = function (id) { clearTimeout(id); delete u._to[id]; };
+    u.observe = function (observer) { u._obs.push(observer); return observer; };
+    u.undo = function (fn) { u._undo.push(fn); };
+    /* Record-once DOM snapshots. The first snap() per (element, key) stores
+       how to put the prior value back; destroy() replays them in reverse.
+       The setters below snap then write, so hot paths can snap once at init
+       and keep writing directly afterwards. */
+    u.snap = function (el, key) {
+      var seen = u._seen.get(el);
+      if (!seen) { seen = {}; u._seen.set(el, seen); }
+      if (seen[key]) return;
+      seen[key] = 1;
+      var kind = key.slice(0, key.indexOf(':') + 1 || key.length);
+      var name = key.slice(kind.length);
+      var prior, priority;
+      if (kind === 'attr:') {
+        prior = el.getAttribute(name);
+        u._undo.push(function () { if (prior === null) el.removeAttribute(name); else el.setAttribute(name, prior); });
+      } else if (kind === 'style:') {
+        prior = el.style.getPropertyValue(name);
+        priority = el.style.getPropertyPriority(name);
+        u._undo.push(function () { if (prior) el.style.setProperty(name, prior, priority); else el.style.removeProperty(name); });
+      } else if (kind === 'class:') {
+        prior = el.classList.contains(name);
+        u._undo.push(function () { el.classList.toggle(name, prior); });
+      } else if (key === 'text') {
+        prior = el.textContent;
+        u._undo.push(function () { el.textContent = prior; });
+      } else if (key === 'html') {
+        prior = el.innerHTML;
+        u._undo.push(function () { el.innerHTML = prior; });
+      }
+    };
+    u.attr = function (el, name, value) { u.snap(el, 'attr:' + name); el.setAttribute(name, value); };
+    u.style = function (el, prop, value) { u.snap(el, 'style:' + prop); el.style.setProperty(prop, value); };
+    u.cls = function (el, name, on) { u.snap(el, 'class:' + name); el.classList.toggle(name, on); };
+    u.text = function (el, value) { u.snap(el, 'text'); el.textContent = value; };
+    c.units.push(u);
+    if (owner) c.owned.set(owner, u);
+    return u;
+  }
+
+  function killUnit(c, u) {
+    u.dead = true;
+    var i;
+    for (i = 0; i < u._ls.length; i++) {
+      var l = u._ls[i];
+      try { l[0].removeEventListener(l[1], l[2], l[3]); } catch (_) {}
+    }
+    u._ls = [];
+    for (i in u._raf) cancelAnimationFrame(+i);
+    u._raf = {};
+    for (i in u._to) clearTimeout(+i);
+    u._to = {};
+    for (i = 0; i < u._obs.length; i++) { try { u._obs[i].disconnect(); } catch (_) {} }
+    u._obs = [];
+    for (i = u._undo.length - 1; i >= 0; i--) {
+      try { u._undo[i](); } catch (err) { console.warn('[flwr] ' + c.name + ' undo failed', err); }
+    }
+    u._undo = [];
+    if (u.owner && c.owned.get(u.owner) === u) c.owned.delete(u.owner);
+  }
+
+  function inScope(owner, scope) {
+    if (!scope || scope === document) return true;
+    if (!owner) return false;
+    if (owner === scope) return true;
+    return !!(owner.nodeType && scope.contains && scope.contains(owner));
+  }
+
+  function destroyController(name, scope) {
+    var c = registry[name];
+    if (!c) return;
+    var keep = [];
+    for (var i = 0; i < c.units.length; i++) {
+      var u = c.units[i];
+      if (inScope(u.owner, scope)) killUnit(c, u); else keep.push(u);
+    }
+    c.units = keep;
+  }
+
+  /* Units whose element left the document (a CMS re-render replaced it)
+     are torn down on the next init() so their loops and listeners do not
+     outlive the markup. Only elements are pruned; document/window units
+     stay. */
+  function pruneDetached(c) {
+    var keep = [];
+    for (var i = 0; i < c.units.length; i++) {
+      var u = c.units[i];
+      var o = u.owner;
+      if (o && o.nodeType === 1 && o.isConnected === false) killUnit(c, u); else keep.push(u);
+    }
+    c.units = keep;
+  }
+
+  /* Look up (or open) the controller registry at the top of every init. */
+  function begin(name) {
+    var c = ctrl(name);
+    pruneDetached(c);
+    return c;
+  }
+
+  /* Delegated controllers (cardStack, collapse) listen once per scope. A
+     scope already covered by a bound ancestor (init(section) after the
+     document boot) gets a records-only unit so exactly one listener pair
+     sees any click; a wider scope retires the narrower bindings inside it.
+     Returns { unit, bound } — bound means "do not add listeners". */
+  function delegatedUnit(c, scope) {
+    var own = c.owned.get(scope);
+    if (own) return { unit: own, bound: true };
+    var i, o;
+    for (i = 0; i < c.units.length; i++) {
+      o = c.units[i].owner;
+      if (o && o !== scope && c.units[i]._ls.length && (o === document || (o.contains && o.contains(scope)))) {
+        return { unit: unit(c, scope), bound: true };
+      }
+    }
+    var keep = [];
+    for (i = 0; i < c.units.length; i++) {
+      o = c.units[i].owner;
+      if (o && o.nodeType === 1 && scope.contains(o)) killUnit(c, c.units[i]); else keep.push(c.units[i]);
+    }
+    c.units = keep;
+    return { unit: unit(c, scope), bound: false };
+  }
+
+  /* -- keyboard helpers ------------------------------------------------- */
+  /* Shared by the keyboard shims below. Native controls already turn
+     Enter/Space into a click, so the shims skip them and only patch
+     non-native click targets (div/span/article). */
+
+  function isNativeControl(el) {
+    if (!el || !el.tagName) return false;
+    var t = el.tagName;
+    return t === 'BUTTON' || t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA' ||
+      t === 'SUMMARY' || (t === 'A' && el.hasAttribute('href'));
+  }
+  function ensureFocusable(el, u) {
+    if (!isNativeControl(el) && !el.hasAttribute('tabindex')) {
+      if (u) u.attr(el, 'tabindex', '0'); else el.setAttribute('tabindex', '0');
+    }
+  }
+  function isActivateKey(e) {
+    return e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar';
+  }
 
   /* -- card stack ------------------------------------------------------- */
 
@@ -30,14 +251,16 @@
 
   /* Apply --_card-stack---index inline based on each slide's position.
      Last DOM child gets index 0 (top of stack), then 1, 2, 3 deeper.
-     Index >= max-depth fades to opacity 0 (handled by CSS fallback too). */
-  function indexStack(wrap) {
+     Index >= max-depth fades to opacity 0 (handled by CSS fallback too).
+     With a unit, the first write per slide is recorded for destroy(). */
+  function indexStack(wrap, u) {
     var list = getStackList(wrap);
     if (!list) return;
     var slides = list.children;
     var n = slides.length;
     for (var i = 0; i < n; i++) {
-      slides[i].style.setProperty('--_card-stack---index', String(n - 1 - i));
+      if (u) u.style(slides[i], '--_card-stack---index', String(n - 1 - i));
+      else slides[i].style.setProperty('--_card-stack---index', String(n - 1 - i));
     }
   }
 
@@ -97,16 +320,29 @@
 
   function initCardStacks(root) {
     var scope = root || document;
+    var c = begin('cardStack');
+    /* One unit per scope: the delegated listeners bind once, the per-call
+       indexing below stays (it is idempotent and picks up new stacks). */
+    var du = delegatedUnit(c, scope);
+    var bound = du.bound, u = du.unit;
     /* Index every stack on the page so depth is correct from first paint */
     var wraps = scope.querySelectorAll('.flwr_card_stack_wrap');
-    for (var i = 0; i < wraps.length; i++) indexStack(wraps[i]);
+    for (var i = 0; i < wraps.length; i++) {
+      indexStack(wraps[i], u);
+      /* Keyboard: non-native click targets (article slides, div nav) get a
+         tab stop so the delegated keydown below can reach them. */
+      var targets = wraps[i].querySelectorAll('.flwr_card_stack_slide, [data-flwr-target="next"], [data-flwr-target="prev"]');
+      for (var k = 0; k < targets.length; k++) ensureFocusable(targets[k], u);
+    }
+    if (bound) return;
 
-    /* Single delegated click handler. Any slide is clickable:
+    /* Shared activation logic for click + keyboard. Any slide is clickable:
          - top slide  → cycle back (wind-up + tuck under)
          - any deeper → slide forward to the top
-       Buttons with data-flwr-target="next"/"prev" still work as explicit nav. */
-    scope.addEventListener('click', function (e) {
-      var slide = e.target.closest && e.target.closest('.flwr_card_stack_slide');
+       Buttons with data-flwr-target="next"/"prev" still work as explicit nav.
+       Returns true when the target belonged to a card stack. */
+    function activateStackTarget(target) {
+      var slide = target.closest && target.closest('.flwr_card_stack_slide');
       if (slide) {
         var wrap = slide.closest('.flwr_card_stack_wrap');
         if (wrap) {
@@ -116,20 +352,34 @@
           } else {
             moveToTop(wrap, slide);
           }
-          return;
+          return true;
         }
       }
-      var nextBtn = e.target.closest && e.target.closest('[data-flwr-target="next"]');
+      var nextBtn = target.closest && target.closest('[data-flwr-target="next"]');
       if (nextBtn) {
         var wrapN = nextBtn.closest('.flwr_card_stack_wrap');
         if (wrapN) nextCard(wrapN);
-        return;
+        return !!wrapN;
       }
-      var prevBtn = e.target.closest && e.target.closest('[data-flwr-target="prev"]');
+      var prevBtn = target.closest && target.closest('[data-flwr-target="prev"]');
       if (prevBtn) {
         var wrapP = prevBtn.closest('.flwr_card_stack_wrap');
         if (wrapP) prevCard(wrapP);
+        return !!wrapP;
       }
+      return false;
+    }
+
+    /* Single delegated click handler. */
+    u.on(scope, 'click', function (e) {
+      activateStackTarget(e.target);
+    });
+    /* Enter/Space on a focused non-native target mirrors the click. Native
+       buttons already synthesize a click, so they are skipped to avoid a
+       double activation. */
+    u.on(scope, 'keydown', function (e) {
+      if (!isActivateKey(e) || isNativeControl(e.target)) return;
+      if (activateStackTarget(e.target)) e.preventDefault();
     });
   }
 
@@ -160,9 +410,15 @@
   }
 
   function initScrollDialogs() {
+    var c = begin('scrollDialog');
     scanScrollDialogs();
     if (!scrollDialogs.length) return;
-    window.addEventListener('scroll', checkScrollDialogs, { passive: true });
+    /* The window scroll listener binds once; later calls only re-scan. */
+    if (!c.owned.has(window)) {
+      var u = unit(c, window);
+      u.on(window, 'scroll', checkScrollDialogs, { passive: true });
+      u.undo(function () { scrollDialogs = []; });
+    }
     /* Run once at load in case page is already scrolled past threshold */
     checkScrollDialogs();
   }
@@ -182,9 +438,12 @@
     return v === 'true';
   }
 
-  function initMarquee(wrap) {
-    if (wrap.__flwrMarqueeInit) return;
-    wrap.__flwrMarqueeInit = true;
+  function initMarquee(wrap, u) {
+    if (!u) {
+      var c = begin('marquee');
+      if (c.owned.has(wrap)) return;
+      u = unit(c, wrap);
+    }
     var track = wrap.querySelector('.flwr_marquee_track');
     if (!track) return;
 
@@ -213,27 +472,35 @@
         var w = wrap.offsetWidth;
         if (w > 0) { cb(w); return; }
         if (attempts > 100) return;
-        requestAnimationFrame(function () { waitForWidth(cb, attempts + 1); });
+        u.raf(function () { waitForWidth(cb, attempts + 1); });
       }
 
       if (originals.length === 1) {
+        var autoClones = [];
+        u.undo(function () {
+          for (var i = 0; i < autoClones.length; i++) {
+            if (autoClones[i].parentNode) autoClones[i].parentNode.removeChild(autoClones[i]);
+          }
+        });
         waitForWidth(function () {
           for (var i = 0; i < Math.ceil(textMultiplier) + 2; i++) {
             var clone = originals[0].cloneNode(true);
             clone.setAttribute('data-auto-duplicate', 'true');
             track.appendChild(clone);
+            autoClones.push(clone);
           }
         });
       }
       [].forEach.call(track.children, function (item) {
         if (item.classList.contains('marquee-clone')) return;
-        item.classList.add('flwr_marquee_item', 'is-text-fill');
+        u.cls(item, 'flwr_marquee_item', true);
+        u.cls(item, 'is-text-fill', true);
       });
 
       function adjustFont() {
         var parentW = wrap.offsetWidth;
         if (parentW === 0) {
-          requestAnimationFrame(function () { requestAnimationFrame(adjustFont); });
+          u.raf(function () { u.raf(adjustFont); });
           return;
         }
         [].forEach.call(track.children, function (item) {
@@ -248,19 +515,19 @@
           document.body.removeChild(measure);
           if (curW > 0) {
             var newFs = (target / curW) * curFs;
-            textEl.style.fontSize = newFs + 'px';
+            u.style(textEl, 'font-size', newFs + 'px');
           }
         });
       }
 
       waitForWidth(adjustFont);
-      setTimeout(adjustFont, 100);
-      setTimeout(adjustFont, 300);
-      if (document.fonts) document.fonts.ready.then(adjustFont);
+      u.timeout(adjustFont, 100);
+      u.timeout(adjustFont, 300);
+      if (document.fonts) document.fonts.ready.then(function () { if (!u.dead) adjustFont(); });
       var rt;
-      window.addEventListener('resize', function () {
-        clearTimeout(rt);
-        rt = setTimeout(adjustFont, 150);
+      u.on(window, 'resize', function () {
+        u.clearTimeout(rt);
+        rt = u.timeout(adjustFont, 150);
       });
     }
     setupTextFill();
@@ -276,6 +543,14 @@
     var rafId = 0;
     var lastT = 0;
 
+    /* destroy(): the track transform goes back to its authored value and
+       the seam clones are removed (measureAndClone also drops any that were
+       there before the first measure, so those cannot be put back). */
+    u.snap(track, 'style:transform');
+    u.undo(function () {
+      [].forEach.call(track.querySelectorAll('.marquee-clone'), function (n) { n.remove(); });
+    });
+
     function measureAndClone() {
       [].forEach.call(track.querySelectorAll('.marquee-clone'), function (n) { n.remove(); });
       var items = [].filter.call(track.children, function (n) { return !n.classList.contains('marquee-clone'); });
@@ -289,15 +564,14 @@
          share the track's transform, so the difference is translation-safe. */
       var fr = first.getBoundingClientRect();
       var lr = last.getBoundingClientRect();
-      /* The wrap period is item[0]→its-clone, which spans the full item set PLUS
-         the one column-gap that flex inserts between the last original item and
-         the first clone. lr.right-fr.left omits that trailing gap, so without it
-         the loop resets one gap short every cycle — the whole track (and anything
-         riding on it, e.g. the arch-gallery transform) hitches sideways by one
-         gap. Add the gap back so the seam is truly continuous. */
+      /* The wrap period is item[0] -> its clone: the item set PLUS the one
+         column-gap flex puts between the last original and the first clone.
+         Without it the loop resets one gap short every cycle and the track
+         hitches sideways. The default track spaces items with padding (gap 0),
+         so this only matters when an author sets gap on the track. */
       var trackCS = getComputedStyle(track);
-      var gap = parseFloat(trackCS.columnGap || trackCS.gap) || 0;
-      var dist = Math.round(lr.right - fr.left + gap);
+      var trackGap = parseFloat(trackCS.columnGap || trackCS.gap) || 0;
+      var dist = Math.round(lr.right - fr.left + trackGap);
       if (!(dist > 0)) return 0;
       /* Clone enough full sets to cover the viewport plus one wrap span, so the
          seam is never visible even when one item set is narrower than the
@@ -350,15 +624,15 @@
         if (packDistance > 0) wrapOff(packDistance);
         track.style.transform = 'translate3d(' + Math.round(offset) + 'px,0,0)';
       }
-      rafId = requestAnimationFrame(tick);
+      rafId = u.raf(tick);
     }
-    function start() { cancelAnimationFrame(rafId); lastT = 0; rafId = requestAnimationFrame(tick); }
+    function start() { u.cancelRaf(rafId); lastT = 0; rafId = u.raf(tick); }
     function pause() { playing = false; targetVx = 0; if (!hoverEase) currentVx = 0; }
     function resume() { playing = true; setSpeed(); }
 
-    if (hoverPause) {
-      wrap.addEventListener('mouseenter', function () { if (!dragging) pause(); });
-      wrap.addEventListener('mouseleave', function () { if (!dragging) resume(); });
+    if (hoverPause && !(window.matchMedia && window.matchMedia('(hover: none)').matches)) { /* touch: no hover-pause (iOS hover-first double tap) */
+      u.on(wrap, 'mouseenter', function () { if (!dragging) pause(); });
+      u.on(wrap, 'mouseleave', function () { if (!dragging) resume(); });
     }
     if (draggable) {
       /* Let the browser own vertical panning (page scroll); JS only handles a
@@ -367,12 +641,13 @@
          over the marquee was hijacked and scrubbed sideways — the marquee glitched
          instead of the page scrolling. touch-action:pan-y tells the browser to
          keep handling vertical scroll and only hand JS the horizontal gestures. */
-      wrap.style.touchAction = 'pan-y';
+      u.style(wrap, 'touch-action', 'pan-y');
+      u.undo(function () { wrap.classList.remove('is-dragging'); });
       var moved = 0;
-      wrap.addEventListener('click', function (e) {
+      u.on(wrap, 'click', function (e) {
         if (moved > 3) { e.stopPropagation(); e.preventDefault(); }
       }, true);
-      wrap.addEventListener('pointerdown', function (e) {
+      u.on(wrap, 'pointerdown', function (e) {
         var startX = e.clientX || 0, startY = e.clientY || 0;
         lastPx = startX; moved = 0;
         var engaged = false;
@@ -403,20 +678,20 @@
           cleanup();
         }
         function cleanup() {
-          window.removeEventListener('pointermove', mv);
-          window.removeEventListener('pointerup', up);
-          window.removeEventListener('pointercancel', up);
+          u.off(window, 'pointermove', mv);
+          u.off(window, 'pointerup', up);
+          u.off(window, 'pointercancel', up);
         }
-        window.addEventListener('pointermove', mv);
-        window.addEventListener('pointerup', up);
-        window.addEventListener('pointercancel', up);
+        u.on(window, 'pointermove', mv);
+        u.on(window, 'pointerup', up);
+        u.on(window, 'pointercancel', up);
       });
     }
 
     var rt;
     function rebuild() { packDistance = measureAndClone(); setSpeed(); }
-    function debounced() { clearTimeout(rt); rt = setTimeout(rebuild, 120); }
-    window.addEventListener('resize', debounced, { passive: true });
+    function debounced() { u.clearTimeout(rt); rt = u.timeout(rebuild, 120); }
+    u.on(window, 'resize', debounced, { passive: true });
 
     function waitAssets() {
       var imgs = track.querySelectorAll('img');
@@ -426,27 +701,32 @@
         [].forEach.call(imgs, function (im) {
           if (im.complete) { if (--pending === 0) res(); }
           else {
-            im.addEventListener('load',  function () { if (--pending === 0) res(); }, { once: true });
-            im.addEventListener('error', function () { if (--pending === 0) res(); }, { once: true });
+            u.on(im, 'load',  function () { if (--pending === 0) res(); }, { once: true });
+            u.on(im, 'error', function () { if (--pending === 0) res(); }, { once: true });
           }
         });
       });
     }
     waitAssets().then(function () {
+      if (u.dead) return;
       function check() {
         if (wrap.offsetWidth > 0 && wrap.offsetHeight > 0) {
           rebuild();
           start();
-        } else requestAnimationFrame(check);
+        } else u.raf(check);
       }
       check();
     });
   }
 
   function initMarquees(scope) {
+    var c = begin('marquee');
     var wraps = (scope || document).querySelectorAll('[data-flwr="marquee"]');
     [].forEach.call(wraps, function (w, i) {
-      setTimeout(function () { initMarquee(w); }, i * 150);
+      if (c.owned.has(w)) return;
+      /* The unit opens at schedule time so destroy() can cancel the stagger. */
+      var u = unit(c, w);
+      u.timeout(function () { initMarquee(w, u); }, i * 150);
     });
   }
 
@@ -456,17 +736,19 @@
 
   function initSwipers(scope) {
     if (typeof window.Swiper === 'undefined') return;
+    var c = begin('swiper');
     var wraps = (scope || document).querySelectorAll('[data-flwr="swiper"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrSwiperInit) return;
-      wrap.__flwrSwiperInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
       var el = wrap.querySelector('.flwr_swiper_wrap');
       var listEl = wrap.querySelector('.flwr_swiper_track');
       if (!el || !listEl) return;
-      el.classList.add('swiper');
-      listEl.classList.add('swiper-wrapper');
-      [].forEach.call(listEl.children, function (c) {
-        c.classList.add('swiper-slide', 'flwr_swiper_slide');
+      u.cls(el, 'swiper', true);
+      u.cls(listEl, 'swiper-wrapper', true);
+      [].forEach.call(listEl.children, function (ch) {
+        u.cls(ch, 'swiper-slide', true);
+        u.cls(ch, 'flwr_swiper_slide', true);
       });
 
       var followFinger     = attrBool(wrap, 'data-flwr-swiper-follow-finger', true);
@@ -477,21 +759,21 @@
       var autoplay         = attrBool(wrap, 'data-flwr-swiper-autoplay', false);
       var speed            = parseInt(attr(wrap, 'data-flwr-swiper-speed', '600'), 10) || 600;
       var autoplayDelay    = parseInt(attr(wrap, 'data-flwr-swiper-autoplay-delay', '4000'), 10) || 4000;
-      /* The framework expresses card spacing as flex gap. Swiper 8 does not
-         include that CSS gap in its snap-grid math, so the rendered cards and
-         drag/navigation positions drift apart. Hand the measured gap to Swiper
-         as spaceBetween and remove the duplicate visual gap from the track. */
-      var trackStyles      = window.getComputedStyle(listEl);
-      var swiperGap        = parseFloat(trackStyles.columnGap || trackStyles.gap) || 0;
-      listEl.style.columnGap = '0px';
-      listEl.style.rowGap = '0px';
+      /* The track spaces slides with CSS gap (--_component---swiper--gap). Swiper
+         leaves CSS gap out of its snap grid, so rendered slides and drag/navigation
+         positions drift apart. Measure the gap, hand it to Swiper as spaceBetween,
+         and zero the CSS gap so it is not applied twice. */
+      var trackCS          = window.getComputedStyle(listEl);
+      var swiperGap        = parseFloat(trackCS.columnGap || trackCS.gap) || 0;
+      u.style(listEl, 'column-gap', '0px');
+      u.style(listEl, 'row-gap', '0px');
 
       var nextBtn = wrap.querySelector('[data-flwr-target="next"] button, [data-flwr-target="next"]');
       var prevBtn = wrap.querySelector('[data-flwr-target="prev"] button, [data-flwr-target="prev"]');
       var paginationEl = wrap.querySelector('[data-flwr-target="pagination"]');
-      if (paginationEl) paginationEl.classList.add('flwr_swiper_pagination');
-      if (nextBtn) nextBtn.classList.add('flwr_swiper_arrow', 'is-next');
-      if (prevBtn) prevBtn.classList.add('flwr_swiper_arrow', 'is-prev');
+      if (paginationEl) { u.snap(paginationEl, 'html'); u.cls(paginationEl, 'flwr_swiper_pagination', true); }
+      if (nextBtn) { u.cls(nextBtn, 'flwr_swiper_arrow', true); u.cls(nextBtn, 'is-next', true); }
+      if (prevBtn) { u.cls(prevBtn, 'flwr_swiper_arrow', true); u.cls(prevBtn, 'is-prev', true); }
 
       var config = {
         slidesPerView: 'auto',
@@ -501,7 +783,7 @@
         slideToClickedSlide: slideToClicked,
         speed: speed,
         loop: loop,
-        loopAdditionalSlides: 10,
+        loopAdditionalSlides: 0,
         spaceBetween: swiperGap,
         watchOverflow: true,
         slideActiveClass: 'is-active',
@@ -526,9 +808,27 @@
           pauseOnMouseEnter: true
         };
       }
-      try { new window.Swiper(el, config); } catch (err) {
-        console.warn('[flwr] swiper init failed', err);
+      function mountSwiper() {
+        if (u.dead) return;
+        if (!el.offsetWidth) { u.timeout(mountSwiper, 200); return; }
+        try {
+          var sw = new window.Swiper(el, config);
+          /* Swiper's own teardown: listeners, loop state, its classes and
+             inline styles (deleteInstance + cleanStyles). */
+          u.undo(function () { try { if (sw && !sw.destroyed) sw.destroy(true, true); } catch (_) {} });
+        } catch (err) {
+          console.warn('[flwr] swiper init failed', err);
+        }
       }
+      // A closed dialog has no slide geometry. Initialize when it becomes visible.
+      if (!el.offsetWidth && typeof ResizeObserver === 'function') {
+        var visibilityObserver = u.observe(new ResizeObserver(function () {
+          if (u.dead || !el.offsetWidth) return;
+          visibilityObserver.disconnect();
+          mountSwiper();
+        }));
+        visibilityObserver.observe(el);
+      } else mountSwiper();
     });
   }
 
@@ -542,11 +842,17 @@
   };
 
   function initMap(wrap) {
-    if (wrap.__flwrMapInit) return;
-    wrap.__flwrMapInit = true;
+    var c = begin('map');
+    if (c.owned.has(wrap)) return;
+    hydrateMap(wrap, unit(c, wrap));
+  }
+
+  function hydrateMap(wrap, u) {
     var canvas = wrap.querySelector('.flwr_map_canvas');
     if (!canvas) return;
-    if (canvas.offsetHeight === 0) { setTimeout(function () { wrap.__flwrMapInit = false; initMap(wrap); }, 200); return; }
+    /* Not laid out yet (hidden tab, collapsed section): retry on the same
+       unit so destroy() cancels the retry too. */
+    if (canvas.offsetHeight === 0) { u.timeout(function () { hydrateMap(wrap, u); }, 200); return; }
 
     var theme = attr(wrap, 'data-flwr-map-theme', 'dark');
     var tileUrl = TILE_URLS[theme] || TILE_URLS.dark;
@@ -566,7 +872,7 @@
     if (!locations.length) return;
 
     var actionBtn = wrap.querySelector('.flwr_map_action');
-    if (actionBtn) actionBtn.style.display = 'none';
+    if (actionBtn) { u.snap(actionBtn, 'attr:href'); u.style(actionBtn, 'display', 'none'); }
     var L = window.L;
     var centerLat = locations.reduce(function (s, l) { return s + l.lat; }, 0) / locations.length;
     var centerLng = locations.reduce(function (s, l) { return s + l.lng; }, 0) / locations.length;
@@ -576,8 +882,15 @@
       zoomControl: true,
       scrollWheelZoom: false
     });
+    /* Leaflet's own teardown removes its panes, controls and listeners —
+       all but the container 'scroll' hook map.remove() forgets (Leaflet
+       1.9.4), which is dropped through its public DomEvent API. */
+    u.undo(function () {
+      try { map.remove(); } catch (_) {}
+      try { if (L.DomEvent && map._onScroll) L.DomEvent.off(canvas, 'scroll', map._onScroll, map); } catch (_) {}
+    });
     /* ctrl+wheel to zoom (avoids hijacking page scroll) */
-    canvas.addEventListener('wheel', function (e) {
+    u.on(canvas, 'wheel', function (e) {
       if (e.ctrlKey) {
         e.preventDefault();
         if (e.deltaY < 0) map.zoomIn(); else map.zoomOut();
@@ -626,7 +939,7 @@
     } else {
       map.setView([locations[0].lat, locations[0].lng], 14);
     }
-    setTimeout(function () { map.invalidateSize(); }, 250);
+    u.timeout(function () { map.invalidateSize(); }, 250);
   }
 
   function initMaps(scope) {
@@ -640,11 +953,12 @@
      adjacent frames. Touch supported. Adapted from Alttura's tod-scrubber. */
 
   function initScrubber(root) {
-    if (root.__flwrScrubInit) return;
-    root.__flwrScrubInit = true;
+    var c = begin('scrubber');
+    if (c.owned.has(root)) return;
+    var u = unit(c, root);
     var layers = [].slice.call(root.querySelectorAll('.flwr_scrubber_layer'));
     if (!layers.length) return;
-    layers.forEach(function (l, i) { l.style.opacity = i === 0 ? '1' : '0'; });
+    layers.forEach(function (l, i) { u.style(l, 'opacity', i === 0 ? '1' : '0'); });
 
     function setFrame(progress) {
       var idx = progress * (layers.length - 1);
@@ -663,11 +977,11 @@
       var p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       setFrame(p);
     }
-    root.addEventListener('mousemove', move);
-    root.addEventListener('mouseenter', move);
-    root.addEventListener('touchstart', move, { passive: true });
-    root.addEventListener('touchmove', move, { passive: true });
-    root.addEventListener('mouseleave', function () { setFrame(0); });
+    u.on(root, 'mousemove', move);
+    u.on(root, 'mouseenter', move);
+    u.on(root, 'touchstart', move, { passive: true });
+    u.on(root, 'touchmove', move, { passive: true });
+    u.on(root, 'mouseleave', function () { setFrame(0); });
     setFrame(0);
   }
 
@@ -682,10 +996,11 @@
      title-swap mode animates a heading element via --_tabs-swap---progress. */
 
   function initTabs(scope) {
+    var c = begin('tabs');
     var wraps = (scope || document).querySelectorAll('[data-flwr="tabs"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrTabsInit) return;
-      wrap.__flwrTabsInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
       var triggers = wrap.querySelectorAll('.flwr_tabs_trigger');
       var panels   = wrap.querySelectorAll('.flwr_tabs_panel');
       var swapTitle = wrap.querySelector('.flwr_tabs_swap_title');
@@ -706,10 +1021,10 @@
         if (swapTitle && swapInner && triggers[idx] && !opts.skipSwap) {
           /* Animate: slide current title out, swap content, slide new in */
           swapTitle.classList.add('is-entering');
-          requestAnimationFrame(function () {
+          u.raf(function () {
             swapInner.textContent = triggers[idx].dataset.flwrTabsTitle ||
               triggers[idx].textContent.trim();
-            requestAnimationFrame(function () {
+            u.raf(function () {
               swapTitle.classList.remove('is-entering');
             });
           });
@@ -717,8 +1032,8 @@
       }
 
       [].forEach.call(triggers, function (t, i) {
-        t.addEventListener('click', function () { activate(i); });
-        t.addEventListener('keydown', function (e) {
+        u.on(t, 'click', function () { activate(i); });
+        u.on(t, 'keydown', function (e) {
           if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); triggers[(i + 1) % triggers.length].focus(); }
           if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')  { e.preventDefault(); triggers[(i - 1 + triggers.length) % triggers.length].focus(); }
         });
@@ -734,9 +1049,11 @@
         swapInner.textContent = triggers[initial].dataset.flwrTabsTitle ||
           triggers[initial].textContent.trim();
       }
+      if (swapTitle) u.undo(function () { swapTitle.classList.remove('is-entering'); });
 
       /* Expose .activate(idx) for programmatic control */
       wrap.__flwrActivate = activate;
+      u.undo(function () { delete wrap.__flwrActivate; });
     });
   }
 
@@ -746,10 +1063,11 @@
      Optional per-tab match counters via [data-flwr-search-tab-counter]. */
 
   function initSearch(scope) {
+    var c = begin('search');
     var wraps = (scope || document).querySelectorAll('[data-flwr="search"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrSearchInit) return;
-      wrap.__flwrSearchInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
       var input    = wrap.querySelector('.flwr_search_input');
       var clearBtn = wrap.querySelector('.flwr_search_clear_btn');
       var prevBtn  = wrap.querySelector('.flwr_search_nav_btn[data-flwr-target="prev"]');
@@ -832,16 +1150,20 @@
         if (marks.length) setCurrent(0); else updateCounter();
       }
 
-      input.addEventListener('input', search);
-      if (clearBtn) clearBtn.addEventListener('click', function () { input.value = ''; search(); input.focus(); });
-      if (prevBtn) prevBtn.addEventListener('click', function () { setCurrent(currentIdx - 1); });
-      if (nextBtn) nextBtn.addEventListener('click', function () { setCurrent(currentIdx + 1); });
-      input.addEventListener('keydown', function (e) {
+      u.on(input, 'input', search);
+      if (clearBtn) u.on(clearBtn, 'click', function () { input.value = ''; search(); input.focus(); });
+      if (prevBtn) u.on(prevBtn, 'click', function () { setCurrent(currentIdx - 1); });
+      if (nextBtn) u.on(nextBtn, 'click', function () { setCurrent(currentIdx + 1); });
+      u.on(input, 'keydown', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           setCurrent(currentIdx + (e.shiftKey ? -1 : 1));
         }
       });
+      /* destroy(): highlights out, counter and nav state back. */
+      if (counter) u.snap(counter, 'text');
+      if (nav) u.snap(nav, 'class:is-active');
+      u.undo(clearMarks);
       updateCounter();
     });
   }
@@ -853,17 +1175,18 @@
 
   function initSwiperThumbs(scope) {
     if (typeof window.Swiper === 'undefined') return;
+    var c = begin('swiperThumbs');
     var wraps = (scope || document).querySelectorAll('[data-flwr="swiper"][data-flwr-swiper-thumbs="true"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrSwiperThumbsInit) return;
-      wrap.__flwrSwiperThumbsInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
       var thumbsWrap = wrap.querySelector('[data-flwr-target="thumbs"]');
       if (!thumbsWrap) return;
-      thumbsWrap.classList.add('swiper');
+      u.cls(thumbsWrap, 'swiper', true);
       var thumbsTrack = thumbsWrap.querySelector('.flwr_swiper_thumbs_track');
-      if (thumbsTrack) thumbsTrack.classList.add('swiper-wrapper');
+      if (thumbsTrack) u.cls(thumbsTrack, 'swiper-wrapper', true);
       [].forEach.call(thumbsWrap.querySelectorAll('.flwr_swiper_thumb'), function (t) {
-        t.classList.add('swiper-slide');
+        u.cls(t, 'swiper-slide', true);
       });
       var thumbsSw = new window.Swiper(thumbsWrap, {
         slidesPerView: 'auto',
@@ -871,6 +1194,7 @@
         watchSlidesProgress: true,
         slideToClickedSlide: true
       });
+      u.undo(function () { try { if (!thumbsSw.destroyed) thumbsSw.destroy(true, true); } catch (_) {} });
       /* Store on wrap so the main initSwipers can pick it up — but we
          actually need to inject thumbs config BEFORE main Swiper init.
          Easier: re-init the main with thumbs config now. */
@@ -891,30 +1215,31 @@
   /* Wraps native <dialog> with showModal()/close() + scroll lock. */
 
   function initFullscreenMenu(scope) {
+    var c = begin('fullscreenMenu');
     var menus = (scope || document).querySelectorAll('[data-flwr="fullscreen-menu"]');
     [].forEach.call(menus, function (menu) {
-      if (menu.__flwrFsMenuInit) return;
-      menu.__flwrFsMenuInit = true;
+      if (c.owned.has(menu)) return;
+      var u = unit(c, menu);
       /* Buttons elsewhere on the page can open this menu via
          [data-flwr-target="fullscreen-menu-trigger"][data-flwr-menu-id="<id>"] */
       var id = menu.id;
       if (id) {
         var triggers = document.querySelectorAll('[data-flwr-target="fullscreen-menu-trigger"][data-flwr-menu-id="' + id + '"]');
         [].forEach.call(triggers, function (t) {
-          t.addEventListener('click', function () {
+          u.on(t, 'click', function () {
             try { menu.showModal(); document.body.style.overflow = 'hidden'; } catch (_) {}
           });
         });
       }
       /* Close buttons inside */
-      [].forEach.call(menu.querySelectorAll('[data-flwr-target="close"]'), function (c) {
-        c.addEventListener('click', function () { menu.close(); document.body.style.overflow = ''; });
+      [].forEach.call(menu.querySelectorAll('[data-flwr-target="close"]'), function (cl) {
+        u.on(cl, 'click', function () { menu.close(); document.body.style.overflow = ''; });
       });
       /* Click on backdrop / media slot closes too */
-      menu.addEventListener('click', function (e) {
+      u.on(menu, 'click', function (e) {
         if (e.target === menu) { menu.close(); document.body.style.overflow = ''; }
       });
-      menu.addEventListener('close', function () { document.body.style.overflow = ''; });
+      u.on(menu, 'close', function () { document.body.style.overflow = ''; });
     });
   }
 
@@ -923,11 +1248,34 @@
      Optional [data-flwr-toggle-href] for navigation after toggle. */
 
   function initToggles(scope) {
+    var c = begin('toggle');
     var wraps = (scope || document).querySelectorAll('.flwr_toggle_wrap.is-position, .flwr_toggle_wrap.is-bulb');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrToggleInit) return;
-      wrap.__flwrToggleInit = true;
-      wrap.addEventListener('click', function () {
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
+      /* Keyboard/ARIA shim — only for wraps that are not a native control
+         and do not wrap a real <input>. Native <button> wraps (styleguide
+         is-bulb) and <label><input></label> wraps are left untouched. */
+      var innerInput = wrap.querySelector('input');
+      var shim = !isNativeControl(wrap) && !innerInput;
+      if (shim) {
+        if (!wrap.hasAttribute('role')) u.attr(wrap, 'role', 'switch');
+        ensureFocusable(wrap, u);
+      }
+      function isOn() {
+        if (wrap.classList.contains('is-position')) {
+          return (wrap.getAttribute('data-position') || 'left') === 'right';
+        }
+        return (wrap.getAttribute('data-flwr-state') || '').indexOf('checked') >= 0;
+      }
+      /* aria-checked is only valid on switch/checkbox roles — sync it there
+         (always true for shimmed wraps, opt-in via role= for native ones). */
+      function syncAria() {
+        var role = wrap.getAttribute('role');
+        if (role !== 'switch' && role !== 'checkbox') return;
+        u.attr(wrap, 'aria-checked', isOn() ? 'true' : 'false');
+      }
+      function activate() {
         if (wrap.classList.contains('is-position')) {
           var pos = wrap.getAttribute('data-position') || 'left';
           var newPos = pos === 'left' ? 'right' : 'left';
@@ -937,9 +1285,19 @@
           var on = s.indexOf('checked') >= 0;
           wrap.setAttribute('data-flwr-state', on ? '' : 'checked');
         }
+        syncAria();
         var href = wrap.getAttribute('data-flwr-toggle-href');
         if (href) setTimeout(function () { window.location.href = href; }, 300);
-      });
+      }
+      u.on(wrap, 'click', activate);
+      if (shim) {
+        u.on(wrap, 'keydown', function (e) {
+          if (!isActivateKey(e) || isNativeControl(e.target)) return;
+          if (e.key !== 'Enter') e.preventDefault(); /* Space would scroll */
+          activate();
+        });
+      }
+      syncAria();
     });
   }
 
@@ -948,103 +1306,165 @@
      toggles [data-flwr-state="open"] on the wrap. Hover trigger is CSS-only. */
 
   function initCardOverlays(scope) {
+    var c = begin('cardOverlay');
     var corners = (scope || document).querySelectorAll('.flwr_card_overlay_wrap.is-trigger-click .flwr_card_overlay_corner');
     [].forEach.call(corners, function (corner) {
-      if (corner.__flwrCardOvInit) return;
-      corner.__flwrCardOvInit = true;
-      corner.addEventListener('click', function (e) {
-        e.stopPropagation();
+      if (c.owned.has(corner)) return;
+      var u = unit(c, corner);
+      function toggle() {
         var wrap = corner.closest('.flwr_card_overlay_wrap');
         if (!wrap) return;
         var s = wrap.getAttribute('data-flwr-state') || '';
         wrap.setAttribute('data-flwr-state', s.indexOf('open') >= 0 ? '' : 'open');
+      }
+      u.on(corner, 'click', function (e) {
+        e.stopPropagation();
+        toggle();
       });
+      /* Keyboard shim for non-native corners (a <button> corner already
+         turns Enter/Space into the click above). */
+      if (!isNativeControl(corner)) {
+        ensureFocusable(corner, u);
+        u.on(corner, 'keydown', function (e) {
+          if (!isActivateKey(e) || isNativeControl(e.target)) return;
+          e.preventDefault();
+          toggle();
+        });
+      }
     });
-    /* Click outside closes any open card-overlay click-triggered cards */
-    document.addEventListener('click', function (e) {
-      var openCards = document.querySelectorAll('.flwr_card_overlay_wrap.is-trigger-click[data-flwr-state~="open"]');
-      [].forEach.call(openCards, function (c) {
-        if (!c.contains(e.target)) c.setAttribute('data-flwr-state', '');
+    /* Click outside closes any open card-overlay click-triggered cards.
+       One document listener for the page, however often init() runs. */
+    if (!c.owned.has(document)) {
+      unit(c, document).on(document, 'click', function (e) {
+        var openCards = document.querySelectorAll('.flwr_card_overlay_wrap.is-trigger-click[data-flwr-state~="open"]');
+        [].forEach.call(openCards, function (card) {
+          if (!card.contains(e.target)) card.setAttribute('data-flwr-state', '');
+        });
       });
-    });
+    }
   }
 
   /* -- navbar (dropdowns, mobile menu, scroll detect) ------------------ */
 
   function initNavbars(scope) {
+    var c = begin('navbar');
     var wraps = (scope || document).querySelectorAll('[data-flwr="navbar"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrNavbarInit) return;
-      wrap.__flwrNavbarInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
 
-      /* Dropdowns. Click toggles by default (keyboard + touch friendly). When the
-         navbar has data-flwr-navbar-trigger="hover", they also open on hover with
-         a short close-delay that bridges the trigger->menu gap, plus focus a11y. */
+      /* Dropdowns. Click toggles by default (keyboard + touch friendly). With
+         data-flwr-navbar-trigger="hover" they also open on hover and focus, with a
+         short close delay that bridges the gap between trigger and menu. */
       var hoverMode = wrap.getAttribute('data-flwr-navbar-trigger') === 'hover';
-      var dropdowns = wrap.querySelectorAll('.flwr_navbar_dropdown');
       var ddCloseTimer;
-      function ddSet(dd, open) {
-        dd.setAttribute('data-flwr-state', open ? 'open' : '');
-        var t = dd.querySelector('.flwr_navbar_dropdown_trigger');
-        if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var ddReturningFocus = false; /* Escape hands focus back to the trigger; that focusin must not reopen */
+      var dropdowns = wrap.querySelectorAll('.flwr_navbar_dropdown');
+      var ddTriggers = []; /* parallel to dropdowns; null when no trigger */
+      /* Single open/close path shared by click + Escape. */
+      function setDropdown(dd, trigger, willOpen) {
+        /* Close siblings */
+        [].forEach.call(dropdowns, function (other) { if (other !== dd) other.setAttribute('data-flwr-state', ''); });
+        dd.setAttribute('data-flwr-state', willOpen ? 'open' : '');
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
       }
-      function ddCloseAll(except) {
-        [].forEach.call(dropdowns, function (dd) { if (dd !== except) ddSet(dd, false); });
-      }
-      function ddOpen(dd) { clearTimeout(ddCloseTimer); ddCloseAll(dd); ddSet(dd, true); }
-      [].forEach.call(dropdowns, function (dd) {
+      [].forEach.call(dropdowns, function (dd, i) {
         var trigger = dd.querySelector('.flwr_navbar_dropdown_trigger');
+        ddTriggers[i] = trigger || null;
         if (!trigger) return;
-        trigger.addEventListener('click', function (e) {
+        /* Hover mode: the pointer already opened the menu on its way to the trigger,
+           so a mouse click there must not toggle it shut under the cursor. Keyboard
+           (no pointerdown) and touch clicks still toggle. */
+        var lastPointer = '';
+        if (hoverMode) u.on(trigger, 'pointerdown', function (e) { lastPointer = e.pointerType || ''; });
+        u.on(trigger, 'click', function (e) {
           e.stopPropagation();
-          var open = (dd.getAttribute('data-flwr-state') || '').indexOf('open') < 0;
-          if (open) ddOpen(dd); else ddSet(dd, false);
+          var s = dd.getAttribute('data-flwr-state') || '';
+          var isOpen = s.indexOf('open') >= 0;
+          var byMouse = lastPointer === 'mouse';
+          lastPointer = '';
+          if (hoverMode && byMouse && isOpen) return;
+          setDropdown(dd, trigger, !isOpen);
         });
         if (hoverMode) {
-          var menu = dd.querySelector('.flwr_navbar_dropdown_menu');
-          var enter = function () { ddOpen(dd); };
-          var leave = function () { ddCloseTimer = setTimeout(function () { ddSet(dd, false); }, 180); };
-          dd.addEventListener('mouseenter', enter);
-          dd.addEventListener('mouseleave', leave);
-          if (menu) { menu.addEventListener('mouseenter', enter); menu.addEventListener('mouseleave', leave); }
-          dd.addEventListener('focusin', enter);
-          dd.addEventListener('focusout', function (e) { if (!dd.contains(e.relatedTarget)) ddSet(dd, false); });
+          /* the close timer is shared by every dropdown in this navbar */
+          var enter = function () { u.clearTimeout(ddCloseTimer); setDropdown(dd, trigger, true); };
+          var leave = function () {
+            u.clearTimeout(ddCloseTimer);
+            ddCloseTimer = u.timeout(function () { setDropdown(dd, trigger, false); }, 180);
+          };
+          u.on(dd, 'mouseenter', enter);
+          u.on(dd, 'mouseleave', leave);
+          u.on(dd, 'focusin', function () { if (!ddReturningFocus) enter(); });
+          u.on(dd, 'focusout', function (e) { if (!dd.contains(e.relatedTarget)) setDropdown(dd, trigger, false); });
         }
       });
-      document.addEventListener('click', function (e) {
-        if (!wrap.contains(e.target)) ddCloseAll(null);
+      u.on(document, 'click', function (e) {
+        if (!wrap.contains(e.target)) {
+          [].forEach.call(dropdowns, function (dd) { dd.setAttribute('data-flwr-state', ''); });
+        }
       });
 
       /* Mobile hamburger */
       var ham = wrap.querySelector('.flwr_navbar_hamburger');
+      /* Single open/close path shared by click + Escape. */
+      function setMenu(open) {
+        wrap.setAttribute('data-flwr-state', open ? 'menu-open' : '');
+        if (ham) ham.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
       if (ham) {
-        ham.addEventListener('click', function () {
+        u.on(ham, 'click', function () {
           var s = wrap.getAttribute('data-flwr-state') || '';
-          var open = s.indexOf('menu-open') < 0;
-          wrap.setAttribute('data-flwr-state', open ? 'menu-open' : '');
-          ham.setAttribute('aria-expanded', open ? 'true' : 'false');
+          setMenu(s.indexOf('menu-open') < 0);
         });
       }
 
+      /* Escape: close an open dropdown (focus → its trigger), else close the
+         mobile menu (focus → hamburger). Document-level so it works wherever
+         focus sits; no-op unless THIS navbar has something open. */
+      u.on(document, 'keydown', function (e) {
+        if (e.key !== 'Escape' && e.key !== 'Esc') return;
+        for (var i = 0; i < dropdowns.length; i++) {
+          var dd = dropdowns[i];
+          if (ddTriggers[i] && (dd.getAttribute('data-flwr-state') || '').indexOf('open') >= 0) {
+            setDropdown(dd, ddTriggers[i], false);
+            ddReturningFocus = true;
+            ddTriggers[i].focus();
+            ddReturningFocus = false;
+            return;
+          }
+        }
+        if (ham && (wrap.getAttribute('data-flwr-state') || '').indexOf('menu-open') >= 0) {
+          setMenu(false);
+          ham.focus();
+        }
+      });
+
       /* Close mobile menu on link click */
       [].forEach.call(wrap.querySelectorAll('.flwr_navbar_mobile_link'), function (a) {
-        a.addEventListener('click', function () { wrap.setAttribute('data-flwr-state', ''); });
+        u.on(a, 'click', function () { wrap.setAttribute('data-flwr-state', ''); });
       });
 
       /* Banner close */
       [].forEach.call(wrap.querySelectorAll('.flwr_navbar_banner_close'), function (b) {
-        b.addEventListener('click', function () {
+        u.on(b, 'click', function () {
           var banner = b.closest('.flwr_navbar_banner');
           if (banner) banner.style.display = 'none';
         });
       });
 
-      /* Scroll detection — adds .is-scrolled past 16px. When the navbar opts into
-         data-flwr-navbar-scroll="auto-hide", it also toggles .is-hidden: hide while
-         scrolling down (past 16px), show while scrolling up, always show at the top. */
+      /* Scroll detection — adds .is-scrolled past 16px */
+      /* v1.1: rAF-throttled — at most one class-write per frame (standard
+         ticking pattern), avoids layout thrash on high-frequency scroll. */
+      var navScrollTicking = false;
+      /* data-flwr-navbar-scroll="auto-hide": also toggle .is-hidden — hide while
+         scrolling down past 16px, show while scrolling up, always show at the top.
+         The matching CSS lives in components.css (auto-hide block). */
       var navAutoHide = wrap.getAttribute('data-flwr-navbar-scroll') === 'auto-hide';
       var navLastY = window.scrollY || 0;
-      function onScroll() {
+      if (navAutoHide) u.snap(wrap, 'class:is-hidden');
+      function applyScrollState() {
+        navScrollTicking = false;
         var y = window.scrollY || 0;
         wrap.classList.toggle('is-scrolled', y > 16);
         if (navAutoHide) {
@@ -1054,8 +1474,14 @@
         }
         navLastY = y;
       }
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+      function onScroll() {
+        if (navScrollTicking) return;
+        navScrollTicking = true;
+        u.raf(applyScrollState);
+      }
+      u.on(window, 'scroll', onScroll, { passive: true });
+      u.snap(wrap, 'class:is-scrolled');
+      applyScrollState();
     });
   }
 
@@ -1067,16 +1493,44 @@
          a [data-flwr-collapse-id="<id>"] wrap (decoupled trigger pattern). */
   function initCollapse(scope) {
     var root = scope || document;
-    root.addEventListener('click', function (e) {
-      var t = e.target.closest && e.target.closest('[data-flwr-target="trigger"], [data-flwr-collapse-target]');
-      if (!t) return;
+    var c = begin('collapse');
+    var TRIGGER_SEL = '[data-flwr-target="trigger"], [data-flwr-collapse-target]';
+    function resolveCollapseWrap(t) {
       var explicitId = t.getAttribute('data-flwr-collapse-target');
-      var wrap = explicitId
+      return explicitId
         ? document.querySelector('[data-flwr-collapse-id="' + explicitId + '"]')
         : t.closest('[data-flwr="collapse"]');
-      if (!wrap) return;
+    }
+    /* Shared toggle for click + keyboard. Returns true when t drove a wrap. */
+    function toggleCollapse(t) {
+      var wrap = resolveCollapseWrap(t);
+      if (!wrap) return false;
       wrap.classList.toggle('is-open');
       t.setAttribute('aria-expanded', wrap.classList.contains('is-open') ? 'true' : 'false');
+      return true;
+    }
+    /* One unit per scope: delegated listeners bind once, the trigger scan
+       below runs on every call so late triggers get their tab stop. */
+    var du = delegatedUnit(c, root);
+    var bound = du.bound, u = du.unit;
+    /* Keyboard: give non-native triggers a tab stop. Only triggers that
+       resolve to a collapse wrap are touched — data-flwr-target="trigger"
+       is also the anchor hook for dropdown/tooltip/popover (runtime.css). */
+    var triggers = root.querySelectorAll(TRIGGER_SEL);
+    for (var i = 0; i < triggers.length; i++) {
+      if (resolveCollapseWrap(triggers[i])) ensureFocusable(triggers[i], u);
+    }
+    if (bound) return;
+    u.on(root, 'click', function (e) {
+      var t = e.target.closest && e.target.closest(TRIGGER_SEL);
+      if (!t) return;
+      toggleCollapse(t);
+    });
+    u.on(root, 'keydown', function (e) {
+      if (!isActivateKey(e) || isNativeControl(e.target)) return;
+      var t = e.target.closest && e.target.closest(TRIGGER_SEL);
+      if (!t) return;
+      if (toggleCollapse(t)) e.preventDefault();
     });
   }
 
@@ -1095,12 +1549,14 @@
     el.classList.toggle('is-empty', !hasVisible);
   }
   function initHideIfEmpty(scope) {
+    var c = begin('hideIfEmpty');
     var els = (scope || document).querySelectorAll('[data-flwr="hide-when-empty"], .f-hide-when-empty');
     [].forEach.call(els, function (el) {
-      if (el.__flwrEmptyInit) return;
-      el.__flwrEmptyInit = true;
+      if (c.owned.has(el)) return;
+      var u = unit(c, el);
+      u.snap(el, 'class:is-empty');
       checkEmpty(el);
-      var mo = new MutationObserver(function () { checkEmpty(el); });
+      var mo = u.observe(new MutationObserver(function () { checkEmpty(el); }));
       mo.observe(el, { childList: true, subtree: true });
     });
   }
@@ -1113,12 +1569,14 @@
     el.classList.toggle('is-disabled', disabled);
   }
   function initDisabledWraps(scope) {
+    var c = begin('disabledWrap');
     var els = (scope || document).querySelectorAll('[data-flwr="disabled-wrap"]');
     [].forEach.call(els, function (el) {
-      if (el.__flwrDisInit) return;
-      el.__flwrDisInit = true;
+      if (c.owned.has(el)) return;
+      var u = unit(c, el);
+      u.snap(el, 'class:is-disabled');
       checkDisabled(el);
-      var mo = new MutationObserver(function () { checkDisabled(el); });
+      var mo = u.observe(new MutationObserver(function () { checkDisabled(el); }));
       mo.observe(el, { attributes: true, childList: true, subtree: true, attributeFilter: ['disabled', 'aria-disabled'] });
     });
   }
@@ -1128,15 +1586,17 @@
      synced. Pair icons with .flwr_player_play / .flwr_player_pause and
      hide via :is or class selector — both are styleLess-compatible. */
   function initPlayerToggles(scope) {
+    var c = begin('playerToggle');
     var btns = (scope || document).querySelectorAll('[data-flwr="player-toggle"]');
     [].forEach.call(btns, function (b) {
-      if (b.__flwrPlayInit) return;
-      b.__flwrPlayInit = true;
+      if (c.owned.has(b)) return;
+      var u = unit(c, b);
       function sync() {
         b.classList.toggle('is-playing', b.getAttribute('aria-pressed') === 'true');
       }
+      u.snap(b, 'class:is-playing');
       sync();
-      b.addEventListener('click', function () {
+      u.on(b, 'click', function () {
         var on = b.getAttribute('aria-pressed') === 'true';
         b.setAttribute('aria-pressed', on ? 'false' : 'true');
         sync();
@@ -1148,13 +1608,15 @@
   /* Replaces select:has(option[value=""]:checked). Tags select with
      .is-empty-select when its current value is empty. */
   function initEmptySelects(scope) {
+    var c = begin('emptySelect');
     var sels = (scope || document).querySelectorAll('select[data-flwr="empty-dim"], select.f-select-dim');
     [].forEach.call(sels, function (sel) {
-      if (sel.__flwrEmptySel) return;
-      sel.__flwrEmptySel = true;
+      if (c.owned.has(sel)) return;
+      var u = unit(c, sel);
       function sync() { sel.classList.toggle('is-empty-select', !sel.value); }
+      u.snap(sel, 'class:is-empty-select');
       sync();
-      sel.addEventListener('change', sync);
+      u.on(sel, 'change', sync);
     });
   }
 
@@ -1238,10 +1700,11 @@
   }
 
   function initList(scope) {
+    var c = begin('list');
     var wraps = (scope || document).querySelectorAll('[data-flwr="list"]');
     [].forEach.call(wraps, function (wrap) {
-      if (wrap.__flwrListInit) return;
-      wrap.__flwrListInit = true;
+      if (c.owned.has(wrap)) return;
+      var u = unit(c, wrap);
 
       var fieldMatch  = attr(wrap, 'data-flwr-list-fieldmatch',     'and');
       var condMatch   = attr(wrap, 'data-flwr-list-conditionsmatch','and');
@@ -1249,6 +1712,9 @@
       var fuzzyThr    = parseInt(attr(wrap, 'data-flwr-list-fuzzy',    '0'),   10) || 0;
       var debounceMs  = parseInt(attr(wrap, 'data-flwr-list-debounce', '150'), 10);
       if (isNaN(debounceMs)) debounceMs = 150;
+      /* Chip copy — overridable per list; defaults keep existing markup as-is */
+      var searchLabel = attr(wrap, 'data-flwr-list-search-label', 'Búsqueda');
+      var removeLabel = attr(wrap, 'data-flwr-list-remove-label', 'Remove filter');
 
       /* State keys: '__text__<fieldAttr>' for text inputs; '<fieldAttr>' for radio/checkbox/select */
       var state = {};
@@ -1259,8 +1725,8 @@
         var items = wrap.querySelectorAll('[data-flwr-list-item]');
         if (items.length) return [].slice.call(items);
         /* Fallback: direct children, excluding structural UI elements */
-        return [].slice.call(wrap.children).filter(function (c) {
-          return c.tagName !== 'TEMPLATE' && !c.hasAttribute('data-flwr-target');
+        return [].slice.call(wrap.children).filter(function (ch) {
+          return ch.tagName !== 'TEMPLATE' && !ch.hasAttribute('data-flwr-target');
         });
       }
 
@@ -1346,18 +1812,19 @@
         for (var i = 0; i < items.length; i++) {
           var m = itemMatchesAll(items[i]);
           if (hiddenClass) {
-            items[i].classList.toggle(hiddenClass, !m);
+            u.cls(items[i], hiddenClass, !m);
           } else {
-            items[i].style.display = m ? '' : 'none';
+            u.style(items[i], 'display', m ? '' : 'none');
           }
           if (m) visible++;
         }
         var cntEl = resolveTarget('results-count');
-        if (cntEl) cntEl.textContent = visible + ' / ' + total;
+        if (cntEl) u.text(cntEl, visible + ' / ' + total);
         var totEl = resolveTarget('items-count');
-        if (totEl) totEl.textContent = String(total);
+        if (totEl) u.text(totEl, String(total));
         var emptyEl = resolveTarget('empty');
         if (emptyEl) {
+          u.snap(emptyEl, 'attr:hidden'); u.snap(emptyEl, 'style:display');
           if (visible === 0) { emptyEl.removeAttribute('hidden'); emptyEl.style.display = ''; }
           else               { emptyEl.setAttribute('hidden', ''); emptyEl.style.display = 'none'; }
         }
@@ -1379,7 +1846,7 @@
            Only fires when a filter IS active (visible < total) and the first
            matching item is not already visible on screen. */
         if (wrap.getAttribute('data-flwr-list-scroll-to-first') === 'true' && visible > 0 && visible < total) {
-          setTimeout(function() {
+          u.timeout(function() {
             var firstActive = null;
             var its = getItems();
             for (var si = 0; si < its.length; si++) {
@@ -1410,6 +1877,7 @@
         var tagsEl = resolveTarget('tags');
         if (!tagsEl) return;
         var tmpl = resolveTarget('tag-template') || wrap.querySelector('template[data-flwr-target="tag-template"]');
+        u.snap(tagsEl, 'html');
         tagsEl.innerHTML = '';
         var keys = Object.keys(state);
         for (var i = 0; i < keys.length; i++) {
@@ -1417,7 +1885,7 @@
           if (!cond.values.length) continue;
           var isText = k.indexOf('__text__') === 0;
           if (isText) {
-            appendChip(tagsEl, tmpl, 'Búsqueda', cond.values.join(' '), k, null);
+            appendChip(tagsEl, tmpl, searchLabel, cond.values.join(' '), k, null);
           } else {
             for (var j = 0; j < cond.values.length; j++) {
               appendChip(tagsEl, tmpl, capField(k), cond.values[j], k, cond.values[j]);
@@ -1426,6 +1894,9 @@
         }
       }
 
+      /* Chips are runtime-owned nodes that renderChips() discards on every
+         pass, so their listeners are not registered — they die with the
+         chip, and destroy() restores the container's original content. */
       function appendChip(container, tmpl, labelPfx, labelVal, key, value) {
         var chip;
         if (tmpl && tmpl.content) {
@@ -1437,7 +1908,7 @@
           ls.setAttribute('data-flwr-target', 'tag-label');
           var rb = document.createElement('button');
           rb.className = 'flwr_chip_close'; rb.setAttribute('data-flwr-target', 'tag-remove');
-          rb.setAttribute('aria-label', 'Remove filter'); rb.textContent = '×';
+          rb.setAttribute('aria-label', removeLabel); rb.textContent = '×';
           chip.appendChild(ls); chip.appendChild(rb);
         }
         var labelEl = chip.querySelector('[data-flwr-target="tag-label"]');
@@ -1538,30 +2009,28 @@
       }
 
       var textTimer = 0;
-      function onTextInput() { clearTimeout(textTimer); textTimer = setTimeout(readState, debounceMs); }
+      function onTextInput() { u.clearTimeout(textTimer); textTimer = u.timeout(readState, debounceMs); }
 
+      /* Inputs and clear buttons are wired once per wrap; the unit's
+         listener list is the record (no per-input flags needed). */
       function wireInputs() {
         var all = document.querySelectorAll('[data-flwr-list-field]');
         [].forEach.call(all, function (inp) {
           if (listResolveWrap(inp) !== wrap) return;
-          if (inp.__flwrListWired) return;
-          inp.__flwrListWired = true;
           var t = inp.type || (inp.tagName === 'SELECT' ? 'select' : 'text');
-          if (t === 'search' || t === 'text') inp.addEventListener('input', onTextInput);
-          else inp.addEventListener('change', readState);
+          if (t === 'search' || t === 'text') u.on(inp, 'input', onTextInput);
+          else u.on(inp, 'change', readState);
         });
         /* Clear buttons: inside the wrap or pointing to it via data-flwr-list-list */
         var clearBtns = document.querySelectorAll('[data-flwr-target="clear"]');
         [].forEach.call(clearBtns, function (btn) {
-          if (btn.__flwrListClearWired) return;
           var w = (btn.closest && btn.closest('[data-flwr="list"]')) ||
                   (function () {
                     var s = btn.getAttribute('data-flwr-list-list');
                     return s ? document.querySelector(s) : null;
                   })();
           if (w !== wrap) return;
-          btn.__flwrListClearWired = true;
-          btn.addEventListener('click', clearAll);
+          u.on(btn, 'click', clearAll);
         });
       }
 
@@ -1575,6 +2044,7 @@
           return getItems().filter(function (item) { return itemMatchesAll(item); });
         }
       };
+      u.undo(function () { delete wrap.__flwrList; });
 
       apply();
     });
@@ -1585,10 +2055,11 @@
      measures their post-rotation bounding box and reserves layout space
      so they don't break the parent flex/grid layout. Pattern from Alttura. */
   function initVerticalText(scope) {
+    var c = begin('verticalText');
     var blocks = (scope || document).querySelectorAll('[data-flwr="vertical-text"]');
     [].forEach.call(blocks, function (block) {
-      if (block.__flwrVTInit) return;
-      block.__flwrVTInit = true;
+      if (c.owned.has(block)) return;
+      var u = unit(c, block);
       function reserve() {
         var rect = block.getBoundingClientRect();
         var parent = block.parentElement;
@@ -1600,23 +2071,129 @@
           parent.insertBefore(w, block);
           w.appendChild(block);
           parent = w;
+          /* destroy(): unwrap — the block goes back where the wrapper sits. */
+          u.undo(function () {
+            if (w.parentNode && block.parentNode === w) {
+              w.parentNode.insertBefore(block, w);
+              w.parentNode.removeChild(w);
+            }
+          });
         }
-        parent.style.height = rect.height + 'px';
-        parent.style.width = '0';
+        u.style(parent, 'height', rect.height + 'px');
+        u.style(parent, 'width', '0');
       }
       reserve();
-      window.addEventListener('resize', reserve, { passive: true });
+      u.on(window, 'resize', reserve, { passive: true });
+    });
+  }
+
+  /* -- theme-adaptive fixed element ------------------------------------
+     A fixed/sticky element (FAB, floating CTA, persistent logo) that must
+     stay legible as it travels over sections of different themes. Opt in
+     with [data-flwr-adapt-theme]; the attribute's value is the class (or
+     space-separated classes) toggled ON while the element sits over a
+     LIGHT-themed section and OFF over a dark/brand one — default is-invert.
+     The theme behind the element is read by sampling the section under the
+     element's centre (document.elementsFromPoint) and resolving the nearest
+     f-mode-* on that section or an ancestor. Resolving at the SECTION level
+     means a nested dark media block inside a light section won't flip it.
+     Recomputes on scroll + resize (rAF-throttled). Generalized from the
+     N58 AlaN-FAB pattern (and the piri-piri adaptive-logo pattern). */
+  function flwrSectionThemeBehind(el) {
+    var r = el.getBoundingClientRect();
+    if (!r.width || !r.height || !document.elementsFromPoint) return 'light';
+    var els = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    var behind = null;
+    for (var i = 0; i < els.length; i++) {
+      if (els[i] !== el && !el.contains(els[i])) { behind = els[i]; break; }
+    }
+    if (!behind) return 'light';
+    var node = (behind.closest && behind.closest('section')) || behind;
+    while (node && node !== document.documentElement) {
+      if (node.classList) {
+        if (node.classList.contains('f-mode-dark'))  return 'dark';
+        if (node.classList.contains('f-mode-brand')) return 'brand';
+        if (node.classList.contains('f-mode-light')) return 'light';
+      }
+      node = node.parentElement;
+    }
+    return 'light';
+  }
+  function initAdaptTheme(scope) {
+    var c = begin('adaptTheme');
+    var els = (scope || document).querySelectorAll('[data-flwr-adapt-theme]');
+    [].forEach.call(els, function (el) {
+      if (c.owned.has(el)) return;
+      var u = unit(c, el);
+      var classes = ((el.getAttribute('data-flwr-adapt-theme') || '').trim() || 'is-invert').split(/\s+/).filter(Boolean);
+      classes.forEach(function (cl) { u.snap(el, 'class:' + cl); });
+      var raf = 0;
+      function update() {
+        raf = 0;
+        var overLight = flwrSectionThemeBehind(el) === 'light';
+        classes.forEach(function (cl) { el.classList.toggle(cl, overLight); });
+      }
+      function schedule() { if (!raf) raf = u.raf(update); }
+      u.on(window, 'scroll', schedule, { passive: true });
+      u.on(window, 'resize', schedule, { passive: true });
+      update();
+    });
+  }
+
+  /* -- scroll-triggered hover on touch ---------------------------------
+     Touch pointers have no :hover, so hover-lift affordances never fire.
+     Opt in per element with [data-flwr-scroll-hover]: on (hover: none)
+     pointers the element gets the given class (default is-scroll-hover)
+     while it sits in the middle band of the viewport (IntersectionObserver
+     rootMargin -35%/-35%), toggled off as it leaves. On hover-capable
+     pointers this is a no-op — real :hover applies. IMPORTANT: give
+     .is-scroll-hover (or your custom class) the SAME CSS as the element's
+     real :hover state — the runtime only toggles the class, it can't know
+     what each element's hover looks like. Generalized from the N58 button
+     scroll-hover pattern. */
+  function initScrollHover(scope) {
+    if (!('IntersectionObserver' in window)) return;
+    if (window.matchMedia && !window.matchMedia('(hover: none)').matches) return;
+    var c = begin('scrollHover');
+    var els = (scope || document).querySelectorAll('[data-flwr-scroll-hover]');
+    if (!els.length) return;
+    /* One observer for the page, held by an unowned unit so only a full
+       destroy() disconnects it; per-element units unobserve on their own. */
+    if (!c.io) {
+      var shared = unit(c, null);
+      c.io = shared.observe(new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          var classes = ((e.target.getAttribute('data-flwr-scroll-hover') || '').trim() || 'is-scroll-hover').split(/\s+/).filter(Boolean);
+          classes.forEach(function (cl) { e.target.classList.toggle(cl, e.isIntersecting); });
+        });
+      }, { rootMargin: '-35% 0px -35% 0px', threshold: 0 }));
+      shared.undo(function () { c.io = null; });
+    }
+    var io = c.io;
+    [].forEach.call(els, function (el) {
+      if (c.owned.has(el)) return;
+      var u = unit(c, el);
+      var classes = ((el.getAttribute('data-flwr-scroll-hover') || '').trim() || 'is-scroll-hover').split(/\s+/).filter(Boolean);
+      classes.forEach(function (cl) { u.snap(el, 'class:' + cl); });
+      u.undo(function () { try { io.unobserve(el); } catch (_) {} });
+      io.observe(el);
     });
   }
 
   /* -- public API ------------------------------------------------------- */
+
+  function destroyer(name) {
+    return function (scope) { destroyController(name, scope); };
+  }
 
   window.flwr = window.flwr || {};
   window.flwr.cardStack = {
     next: nextCard,
     prev: prevCard,
     moveToTop: moveToTop,
-    reindex: indexStack
+    reindex: indexStack,
+    init: initCardStacks,
+    destroy: destroyer('cardStack')
   };
   window.flwr.scrollDialog = {
     refresh: function () {
@@ -1626,60 +2203,117 @@
     reset: function (dialog) {
       if (dialog) scrollFired.delete(dialog);
       else scrollFired = new WeakSet();
-    }
+    },
+    init: initScrollDialogs,
+    destroy: destroyer('scrollDialog')
   };
-  window.flwr.marquee        = { init: initMarquees };
-  window.flwr.swiper         = { init: initSwipers, initThumbs: initSwiperThumbs };
-  window.flwr.map            = { init: initMaps };
-  window.flwr.scrubber       = { init: initScrubbers };
-  window.flwr.tabs           = { init: initTabs };
-  window.flwr.search         = { init: initSearch };
-  window.flwr.fullscreenMenu = { init: initFullscreenMenu };
-  window.flwr.toggle         = { init: initToggles };
-  window.flwr.cardOverlay    = { init: initCardOverlays };
-  window.flwr.navbar         = { init: initNavbars };
-  window.flwr.collapse       = { init: initCollapse };
-  window.flwr.hideIfEmpty    = { init: initHideIfEmpty };
-  window.flwr.disabledWrap   = { init: initDisabledWraps };
-  window.flwr.playerToggle   = { init: initPlayerToggles };
-  window.flwr.emptySelect    = { init: initEmptySelects };
-  window.flwr.verticalText   = { init: initVerticalText };
-  window.flwr.list           = { init: initList };
+  window.flwr.marquee        = { init: initMarquees,      destroy: destroyer('marquee') };
+  window.flwr.swiper         = { init: initSwipers,       destroy: destroyer('swiper'),
+                                 initThumbs: initSwiperThumbs, destroyThumbs: destroyer('swiperThumbs') };
+  window.flwr.map            = { init: initMaps,          destroy: destroyer('map') };
+  window.flwr.scrubber       = { init: initScrubbers,     destroy: destroyer('scrubber') };
+  window.flwr.tabs           = { init: initTabs,          destroy: destroyer('tabs') };
+  window.flwr.search         = { init: initSearch,        destroy: destroyer('search') };
+  window.flwr.fullscreenMenu = { init: initFullscreenMenu, destroy: destroyer('fullscreenMenu') };
+  window.flwr.toggle         = { init: initToggles,       destroy: destroyer('toggle') };
+  window.flwr.cardOverlay    = { init: initCardOverlays,  destroy: destroyer('cardOverlay') };
+  window.flwr.navbar         = { init: initNavbars,       destroy: destroyer('navbar') };
+  window.flwr.collapse       = { init: initCollapse,      destroy: destroyer('collapse') };
+  window.flwr.hideIfEmpty    = { init: initHideIfEmpty,   destroy: destroyer('hideIfEmpty') };
+  window.flwr.disabledWrap   = { init: initDisabledWraps, destroy: destroyer('disabledWrap') };
+  window.flwr.playerToggle   = { init: initPlayerToggles, destroy: destroyer('playerToggle') };
+  window.flwr.emptySelect    = { init: initEmptySelects,  destroy: destroyer('emptySelect') };
+  window.flwr.verticalText   = { init: initVerticalText,  destroy: destroyer('verticalText') };
+  window.flwr.list           = { init: initList,          destroy: destroyer('list') };
+  window.flwr.adaptTheme     = { init: initAdaptTheme,    destroy: destroyer('adaptTheme') };
+  window.flwr.scrollHover    = { init: initScrollHover,   destroy: destroyer('scrollHover') };
 
   /* -- bootstrap -------------------------------------------------------- */
 
-  function init() {
-    initCardStacks(document);
-    initScrollDialogs();
-    initMarquees(document);
-    initSwipers(document);
-    initSwiperThumbs(document);
-    initMaps(document);
-    initScrubbers(document);
-    initTabs(document);
-    initSearch(document);
-    initFullscreenMenu(document);
-    initToggles(document);
-    initCardOverlays(document);
-    initNavbars(document);
-    initCollapse(document);
-    initHideIfEmpty(document);
-    initDisabledWraps(document);
-    initPlayerToggles(document);
-    initEmptySelects(document);
-    initVerticalText(document);
-    initList(document);
+  /* Per-controller error isolation: a throw inside one controller is logged
+     once and the remaining controllers still run. Controller signatures are
+     untouched — the public window.flwr.*.init entries call them directly. */
+  function runController(name, fn, arg) {
+    try {
+      fn(arg);
+    } catch (err) {
+      console.warn('[flwr] ' + name + ' failed', err);
+    }
+  }
+
+  /* Boot order. destroy() walks it in reverse so dependents (swiper
+     thumbs) fall before what they hang on (swiper). */
+  var CONTROLLERS = [
+    ['cardStack',      initCardStacks],
+    ['scrollDialog',   initScrollDialogs],
+    ['marquee',        initMarquees],
+    ['swiper',         initSwipers],
+    ['swiperThumbs',   initSwiperThumbs],
+    ['map',            initMaps],
+    ['scrubber',       initScrubbers],
+    ['tabs',           initTabs],
+    ['search',         initSearch],
+    ['fullscreenMenu', initFullscreenMenu],
+    ['toggle',         initToggles],
+    ['cardOverlay',    initCardOverlays],
+    ['navbar',         initNavbars],
+    ['collapse',       initCollapse],
+    ['hideIfEmpty',    initHideIfEmpty],
+    ['disabledWrap',   initDisabledWraps],
+    ['playerToggle',   initPlayerToggles],
+    ['emptySelect',    initEmptySelects],
+    ['verticalText',   initVerticalText],
+    ['list',           initList],
+    ['adaptTheme',     initAdaptTheme],
+    ['scrollHover',    initScrollHover]
+  ];
+
+  function init(scope) {
+    var s = (scope && scope.querySelectorAll) ? scope : document;
+    hookLoad();
+    for (var i = 0; i < CONTROLLERS.length; i++) {
+      /* scrollDialog scans the whole document by design and takes no scope */
+      if (CONTROLLERS[i][0] === 'scrollDialog') runController('scrollDialog', initScrollDialogs);
+      else runController(CONTROLLERS[i][0], CONTROLLERS[i][1], s);
+    }
+  }
+
+  function destroyAll(scope) {
+    var s = (scope && scope.querySelectorAll && scope !== document) ? scope : null;
+    for (var i = CONTROLLERS.length - 1; i >= 0; i--) destroyController(CONTROLLERS[i][0], s);
+    /* A full destroy also drops the boot listeners, so the page holds
+       nothing from the runtime until init() is called again. */
+    if (!s) {
+      document.removeEventListener('DOMContentLoaded', boot);
+      window.removeEventListener('load', onLoad);
+      loadHooked = false;
+    }
+  }
+
+  window.flwr.init = init;
+  window.flwr.destroy = destroyAll;
+
+  function boot() { init(); }
+  /* Re-init for libs that load after our script (Swiper, Leaflet via CDN) */
+  function onLoad() {
+    runController('swiper',       initSwipers,      document);
+    runController('swiperThumbs', initSwiperThumbs, document);
+    runController('map',          initMaps,         document);
+  }
+  /* The load hook is armed by init() while the page is still loading, so
+     init() after an early destroy() behaves like a fresh boot; once the
+     page has loaded there is nothing for it to do and it is not re-added. */
+  var loadHooked = false;
+  function hookLoad() {
+    if (loadHooked || document.readyState === 'complete') return;
+    loadHooked = true;
+    window.addEventListener('load', onLoad);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', boot);
   } else {
-    init();
+    boot();
   }
-  /* Re-init for libs that load after our script (Swiper, Leaflet via CDN) */
-  window.addEventListener('load', function () {
-    initSwipers(document);
-    initSwiperThumbs(document);
-    initMaps(document);
-  });
+  hookLoad();
 })();
