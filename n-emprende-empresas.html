@@ -26,7 +26,8 @@
   <link rel="stylesheet" href="css/variables.css?v=e78ee964">
   <link rel="stylesheet" href="css/project.css?v=69765736">
   <link rel="stylesheet" href="css/tpl-producto.css?v=2e9d8caa">
-  <link rel="stylesheet" href="css/n58-courses.css?v=862da5f1">
+  <link rel="stylesheet" href="css/n58-courses.css?v=7b118a79">
+  <link rel="stylesheet" href="css/n58-hairline.css?v=708f5261">
   <script src="assets/n58-dialogs.js?v=88678ca5"></script>
 </head>
 <body>
@@ -345,7 +346,7 @@
 
       <!-- ════════════════ 05 · RESULTADOS [dark] · Hairline "baldosas" (lab Resultados 09, figure enlarged) ════════════════
            100 isometric tiles, 67 raised = 67 % women (client deck). Pointer/finger lifts the tiles.
-           Figure: assets/n58-hairline-baldosas.js (Hairline kernel unchanged + per-instance mount). -->
+           Figure: assets/hairline/baldosas.js on the shared runtime assets/hairline/n58-hairline.js. -->
       <section class="f-section-lg f-mode-dark" aria-label="Resultados de N^Emprende">
         <div class="n58-container">
           <div class="n58-courses_head n58-reveal">
@@ -359,8 +360,8 @@
               <p class="f-text-small f-text-color-muted n58-reveal is-3">Cada baldosa es el 1% de los beneficiarios: las 67 elevadas son ese 67%.</p>
             </div>
             <div class="n58-ne-results_fig n58-reveal">
-              <div class="n58-ne-hairline" data-n58-hairline="baldosas"></div>
-              <p class="n58-ne-results_read f-text-small f-text-color-muted"><span data-n58-hairline-read data-rest="Pasa el cursor o el dedo por las baldosas">Pasa el cursor o el dedo por las baldosas</span></p>
+              <div class="n58-hairline n58-ne-hairline" data-n58-hairline="baldosas"></div>
+              <p class="n58-ne-results_read f-text-small f-text-color-muted"><span data-n58-hairline-read data-prefix="Baldosa " data-rest="Pasa el cursor o el dedo por las baldosas">Pasa el cursor o el dedo por las baldosas</span></p>
             </div>
           </div>
           <div class="n58-ne-results_trio">
@@ -766,7 +767,8 @@
   <!-- Navbar theme: flips the bar to ink over light sections. -->
   <script src="assets/n58-navbar-theme.js?v=9497e310" defer></script>
   <script src="assets/n58-arch-gallery.js?v=2c1e0f99" defer></script>
-  <script src="assets/n58-hairline-baldosas.js?v=591ef795" defer></script>
+  <script src="assets/hairline/n58-hairline.js?v=d7be9334" defer></script>
+  <script src="assets/hairline/baldosas.js?v=aa2d543d" defer></script>
 
   <!-- MOBILE-ONLY (≤991px) smoothness swap. Desktop is left completely untouched:
        the ticker + gallery keep the draggable flwr marquee (drag-scrub +
@@ -950,11 +952,16 @@
 
   <!-- N^Emprende story ("Foco en la mujer"): scroll position drives each sentence of the pinned
        3-screen scene: words light from dim to cream, then the sentence rises out while the next
-       rises in. One rAF per scroll; reduced motion leaves the static stacked layout (CSS). -->
+       rises in. One rAF per scroll; under reduced motion it fades only (no slide). Without JS the
+       three sentences stay stacked and lit (CSS). -->
   <script>
     (function () {
       var secs = document.querySelectorAll('[data-n58-story]');
-      if (!secs.length || !window.matchMedia || !window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+      if (!secs.length) return;
+      /* The reveal is driven by the reader's own scrolling, so it also runs under reduced motion;
+         there it only fades (no sliding). */
+      var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var LIFT = still ? 0 : 56;
       function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
       Array.prototype.forEach.call(secs, function (sec) {
         var lines = Array.prototype.slice.call(sec.querySelectorAll('[data-n58-story-line]'));
@@ -966,8 +973,8 @@
           var p = (total > 0 ? clamp(-r.top / total) : 0) * n;
           lines.forEach(function (line, i) {
             var s = p - i, a = 1, y = 0;
-            if (i > 0) { var e = clamp((s + 0.06) / 0.18); a = e; y = (1 - e) * 56; }
-            if (i < n - 1 && s > 0.8) { var x = clamp((s - 0.8) / 0.18); a = Math.min(a, 1 - x); y = -x * 56; }
+            if (i > 0) { var e = clamp((s + 0.06) / 0.18); a = e; y = (1 - e) * LIFT; }
+            if (i < n - 1 && s > 0.8) { var x = clamp((s - 0.8) / 0.18); a = Math.min(a, 1 - x); y = -x * LIFT; }
             line.style.opacity = a.toFixed(3);
             line.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
             line.style.visibility = a < 0.01 ? 'hidden' : 'visible';

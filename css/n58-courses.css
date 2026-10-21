@@ -384,13 +384,6 @@
   margin-top: -4rem;
 }
 [data-flwr] .n58-ne-hairline {
-  --hairline-plate: var(--_palette---neutral--900);
-  --hairline-hi: var(--_palette---core--500);
-  --hairline-edge: var(--_palette---neutral--300);
-  --hairline-mid: var(--_palette---neutral--500);
-  --hairline-lo: var(--_palette---neutral--700);
-  --hairline-stroke: 1;
-  width: 100%;
   max-width: none;
 }
 .n58-ne-results_read {
@@ -433,9 +426,9 @@
 }
 
 /* Foco en la mujer — 3-screen story (lab Mujer 11, scrubbed). Static by default
-   (three sentences stacked, fully lit). Only with motion allowed does the section
-   become a pinned stage, driven by the inline "N^Emprende story" script (which adds
-   .is-scrubbed and sets per-word / per-line opacity + transform). */
+   (three sentences stacked, fully lit). The inline "N^Emprende story" script adds
+   .is-scrubbed, which pins the stage, and drives per-word / per-line opacity (+ slide
+   unless reduced motion). */
 .n58-ne-story {
   position: relative;
   padding-top: var(--_spacing---step--9);
@@ -489,34 +482,32 @@
 .n58-ne-story_pill-img.is-pos-c { object-position: 50% 50%; }
 .n58-ne-story_pill-img.is-pos-d { object-position: 50% 56%; }
 
-@media (prefers-reduced-motion: no-preference) {
-  /* Pinned stage: 1 screen of stage + ~0.85 screen of scroll per sentence. */
-  .n58-ne-story.is-scrubbed {
-    height: 360svh;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-  .n58-ne-story.is-scrubbed .n58-ne-story_stage {
-    position: sticky;
-    top: 0;
-    display: flex;
-    align-items: center;
-    height: 100svh;
-    overflow-x: clip;
-    overflow-y: clip;
-  }
-  .n58-ne-story.is-scrubbed .n58-ne-story_inner {
-    width: 100%;
-    padding-top: var(--_component---navbar--height-total);
-  }
-  .n58-ne-story.is-scrubbed .n58-ne-story_lines {
-    row-gap: 0;
-  }
-  .n58-ne-story.is-scrubbed .n58-ne-story_line {
-    grid-row-start: 1;
-    grid-column-start: 1;
-    will-change: opacity, transform;
-  }
+/* Pinned stage (only once the driver script adds .is-scrubbed): 1 screen of stage + ~0.85 screen of scroll per sentence. */
+.n58-ne-story.is-scrubbed {
+  height: 360svh;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.n58-ne-story.is-scrubbed .n58-ne-story_stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 100svh;
+  overflow-x: clip;
+  overflow-y: clip;
+}
+.n58-ne-story.is-scrubbed .n58-ne-story_inner {
+  width: 100%;
+  padding-top: var(--_component---navbar--height-total);
+}
+.n58-ne-story.is-scrubbed .n58-ne-story_lines {
+  row-gap: 0;
+}
+.n58-ne-story.is-scrubbed .n58-ne-story_line {
+  grid-row-start: 1;
+  grid-column-start: 1;
+  will-change: opacity, transform;
 }
 
 @media (max-width: 991px) {

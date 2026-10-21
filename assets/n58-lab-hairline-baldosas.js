@@ -1,5 +1,4 @@
-/* N^Emprende · Resultados — Hairline figure "baldosas" (chosen from lab option 09).
-   LICENCE: the kernel is @lucasmarkes/hairline; confirm its licence before this ships.
+/* N^Emprende lab - Resultados 09. Hairline figure "baldosas".
    Part 1: the @lucasmarkes/hairline kernel, unchanged (hairline-create skill, kernel.js).
    Part 2: a small mount for every [data-n58-hairline] on the page (no bench, no controls).
    Part 3: the figure. */
@@ -765,7 +764,7 @@ const falloff = (u) =>
 
 function mount({ stage, svg, read }, value) {
   const bag = disposer();
-  const C = Cam(45, 0.5, 1.8); // page copy: larger scale so the slab fills the frame (lab: 1.5)
+  const C = Cam(45, 0.5, 1.5);
   fit(C, [[-6, -6, -PB], [EXT + 6, EXT + 6, -PB], [EXT + 6, -6, -PB], [-6, EXT + 6, -PB], [0, 0, H_UP + LIFT]], 200, 170);
   const P = proj(C), front = facing(C);
   let R = value * CELL, over = null;
@@ -785,7 +784,7 @@ function mount({ stage, svg, read }, value) {
   let under = null;
 
   function draw(t) {
-    const h = Math.max(0.6, t.sp.x), hi = t.up || t === under; // page copy: the 67 stay lit while the pointer moves
+    const h = Math.max(0.6, t.sp.x), hi = under ? t === under : t.up;
     if (h !== t.drawn) { t.drawn = h; put(t.el, prism(P, front, t.ring, t.inner, 0, h)); t.hi = null; }
     if (hi !== t.hi) { t.hi = hi; t.el.sil.classList.toggle("hi", hi); }
   }

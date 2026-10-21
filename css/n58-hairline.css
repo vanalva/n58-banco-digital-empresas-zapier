@@ -1,0 +1,66 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   N58 · Hairline figures — palette + sizing for every [data-n58-hairline]
+   stage (runtime: assets/hairline/n58-hairline.js). The kernel reads
+   --hairline-{plate,edge,mid,lo,hi,stroke}; here they follow the SECTION
+   tokens, so one figure reads right on dark, light and lime bands.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-flwr] .n58-hairline {
+  --hairline-plate: var(--_section---surface);
+  --hairline-edge: var(--_section---text-strong);
+  --hairline-mid: var(--_section---text-muted);
+  --hairline-lo: var(--_section---border);
+  --hairline-hi: var(--_section---accent);
+  --hairline-stroke: 1;
+  display: block;
+  width: 100%;
+}
+/* On light sections the lime accent is too faint as a line: use the deep core. */
+[data-flwr] .n58-hairline.is-on-light {
+  --hairline-hi: var(--_palette---core--700);
+}
+
+/* Slot sizes. The kernel gives every stage a 5:4 box; these only cap its width. */
+[data-flwr] .n58-hairline.is-hero {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+[data-flwr] .n58-hairline.is-stage {
+  max-width: 46rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+[data-flwr] .n58-hairline.is-scene {
+  max-width: 60rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+[data-flwr] .n58-hairline.is-icon {
+  width: clamp(9rem, 14vw, 13rem);
+  margin-left: calc(var(--_spacing---step--3) * -1);
+}
+[data-flwr] .n58-hairline.is-banner {
+  width: min(52rem, 92vmin);
+}
+
+@media (max-width: 767px) {
+  [data-flwr] .n58-hairline.is-icon {
+    width: 9.5rem;
+  }
+}
+
+/* Empresas statement banner: the coin ring circles the headline, so it is drawn
+   larger than the title block and its faces take the banner's own violet. */
+[data-flwr] .n58-hairline.is-banner {
+  --hairline-plate: var(--_palette---alternate--900);
+  width: min(78rem, 112vw);
+}
+@media (max-width: 767px) {
+  [data-flwr] .n58-hairline.is-banner {
+    width: 150vw;
+  }
+}
+/* The ring is wider than a phone screen; the banner clips it instead of the page scrolling sideways. */
+[data-flwr] .n58-emp-banner {
+  overflow-x: clip;
+}
