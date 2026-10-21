@@ -120,6 +120,8 @@
     animation-name: n58-hero-in;
     animation-timeline: auto;
     animation-range: normal;
+    --flwr-sd-timeline: none;
+    --flwr-sd-range: normal;
     animation-duration: 0.8s;
     animation-timing-function: var(--_motion---ease-emphasized);
     animation-fill-mode: both;
@@ -139,6 +141,8 @@
     animation-name: n58-hero-in;
     animation-timeline: auto;
     animation-range: normal;
+    --flwr-sd-timeline: none;
+    --flwr-sd-range: normal;
     animation-duration: 0.8s;
     animation-timing-function: var(--_motion---ease-emphasized);
     animation-fill-mode: both;

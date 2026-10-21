@@ -714,7 +714,7 @@
     typeSel.addEventListener('input', apply);
     apply();
   }
-  /* States follow the Webflow form pattern (same as N’Emprende): the form sits in div.w-form with a w-form-done and a
+  /* States follow the Webflow form pattern (same as N^Emprende): the form sits in div.w-form with a w-form-done and a
      w-form-fail as direct children. Webflow shows them with an inline display and hides the form; the static preview
      shows them with the hidden attribute (.n58-form_toggle[hidden]). Either way the observer below moves focus to the
      panel title once it appears. */

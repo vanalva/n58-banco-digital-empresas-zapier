@@ -277,15 +277,17 @@
   transform-origin: top center;
   background-color: var(--tpl-accent);
 }
-@supports (animation-timeline: scroll()) {
-  .tpl-blog_toc_rail::after {
-    transform: scaleY(0);
-    animation-name: tpl-blog-read;
-    animation-duration: 1ms;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: scroll(root block);
-  }
+/* No @supports gate: the flwr scroll engine (runtime.js) drives this same
+   keyframe from --flwr-sd-timeline where animation-timeline is missing/buggy.
+   Without either, the 1ms animation just lands on the full rail. */
+.tpl-blog_toc_rail::after {
+  transform: scaleY(0);
+  animation-name: tpl-blog-read;
+  animation-duration: 1ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-timeline: scroll(root block);
+  --flwr-sd-timeline: scroll(root block);
 }
 @keyframes tpl-blog-read {
   from { transform: scaleY(0); }

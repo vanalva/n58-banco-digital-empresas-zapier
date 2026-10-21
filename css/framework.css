@@ -1556,44 +1556,65 @@
   }
 
   /* ===== Scroll-driven animations — compositor thread, zero JS ===== */
+  /* v1.7.1 contract: every scroll-driven rule ALSO declares --flwr-sd-timeline
+     (the animation-timeline value) and --flwr-sd-range (the animation-range
+     value, default normal). Custom properties survive every browser, so the
+     Safari engine in runtime.js reads them and drives the same animation with
+     the same math. A named timeline's definer adds --flwr-sd-timeline-name
+     (and -axis, -kind: scroll, -inset). Project CSS must follow the same
+     contract; see refs/flwr-architecture.md "Scroll animations in Safari". */
   @media (prefers-reduced-motion: no-preference) {
     [data-flwr] .f-fade-in-on-scroll {
       animation: flwr-rt-fade-in linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-fade-up-on-scroll {
       animation: flwr-rt-fade-up linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-fade-down-on-scroll {
       animation: flwr-rt-fade-down linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-slide-in-left-on-scroll {
       animation: flwr-rt-slide-left linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-slide-in-right-on-scroll {
       animation: flwr-rt-slide-right linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-scale-in-on-scroll {
       animation: flwr-rt-scale-in linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
+      --flwr-sd-timeline: view();
+      --flwr-sd-range: entry 0% cover 30%;
     }
     [data-flwr] .f-parallax-slow {
       animation: flwr-rt-parallax-slow linear;
       animation-timeline: scroll(root block);
+      --flwr-sd-timeline: scroll(root block);
     }
     [data-flwr] .f-parallax-fast {
       animation: flwr-rt-parallax-fast linear;
       animation-timeline: scroll(root block);
+      --flwr-sd-timeline: scroll(root block);
     }
   }
 
@@ -1616,14 +1637,14 @@
      Re-open the gate for keep-marked elements only, consistent with tokens.css
      exempting data-flwr-motion="keep" from the global motion killer. */
   @media (prefers-reduced-motion: reduce) {
-    [data-flwr] [data-flwr-motion~="keep"].f-fade-in-on-scroll        { animation: flwr-rt-fade-in linear both;    animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-fade-up-on-scroll        { animation: flwr-rt-fade-up linear both;    animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-fade-down-on-scroll      { animation: flwr-rt-fade-down linear both;  animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-slide-in-left-on-scroll  { animation: flwr-rt-slide-left linear both; animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-slide-in-right-on-scroll { animation: flwr-rt-slide-right linear both;animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-scale-in-on-scroll       { animation: flwr-rt-scale-in linear both;   animation-timeline: view(); animation-range: entry 0% cover 30%; }
-    [data-flwr] [data-flwr-motion~="keep"].f-parallax-slow            { animation: flwr-rt-parallax-slow linear;   animation-timeline: scroll(root block); }
-    [data-flwr] [data-flwr-motion~="keep"].f-parallax-fast            { animation: flwr-rt-parallax-fast linear;   animation-timeline: scroll(root block); }
+    [data-flwr] [data-flwr-motion~="keep"].f-fade-in-on-scroll        { animation: flwr-rt-fade-in linear both;    animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-fade-up-on-scroll        { animation: flwr-rt-fade-up linear both;    animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-fade-down-on-scroll      { animation: flwr-rt-fade-down linear both;  animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-slide-in-left-on-scroll  { animation: flwr-rt-slide-left linear both; animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-slide-in-right-on-scroll { animation: flwr-rt-slide-right linear both;animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-scale-in-on-scroll       { animation: flwr-rt-scale-in linear both;   animation-timeline: view(); animation-range: entry 0% cover 30%; --flwr-sd-timeline: view(); --flwr-sd-range: entry 0% cover 30%; }
+    [data-flwr] [data-flwr-motion~="keep"].f-parallax-slow            { animation: flwr-rt-parallax-slow linear;   animation-timeline: scroll(root block); --flwr-sd-timeline: scroll(root block); }
+    [data-flwr] [data-flwr-motion~="keep"].f-parallax-fast            { animation: flwr-rt-parallax-fast linear;   animation-timeline: scroll(root block); --flwr-sd-timeline: scroll(root block); }
   }
 
   /* ===== View Transitions API — page morph hooks ===== */

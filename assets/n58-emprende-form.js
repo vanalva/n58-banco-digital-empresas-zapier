@@ -1,4 +1,4 @@
-/* N’Emprende · formulario de postulación (4 pasos).
+/* N^Emprende · formulario de postulación (4 pasos).
    Progressive enhancement over a plain Webflow form:
    - no JS  : the four <fieldset>s stack, only «Enviar postulación» shows, the form posts natively.
    - with JS: one fieldset at a time, per-step native validation, flwr stepper state, focus + scroll.

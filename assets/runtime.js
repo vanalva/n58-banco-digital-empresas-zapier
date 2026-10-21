@@ -15,6 +15,7 @@
      flwr.cardStack.next(stackEl)
      flwr.cardStack.prev(stackEl)
      flwr.scrollDialog.refresh()                 re-scan DOM for new dialogs
+     flwr.scrollEngine.refresh()/items()         Safari scroll-driven animation engine (see its section)
      flwr.<controller>.init(scope?)             hydrate (idempotent, see below)
      flwr.<controller>.destroy(scope?)          tear down what init() created
      flwr.init(scope?)                           every controller, boot order
@@ -41,7 +42,8 @@
        Document/window-level bindings only fall on a full destroy().
      - Pages that never call destroy() behave exactly as before.
 
-   Size: ~95 KB source, ~40 KB minified, ~12 KB gzipped. 22 controllers run in
+   Size: ~118 KB source, ~49.5 KB minified, ~16 KB gzipped (the 1.7.1 scroll
+   engine is ~7.2 KB min, ~3.2 KB gz of that). 23 controllers run in
    sequence from init(). Optional peers: Swiper (flwr_swiper_*) and Leaflet
    (flwr_map_*) are hydrated when present on window; nothing else is required.
    v1.2: each controller runs through runController() so one failure is
@@ -2167,6 +2169,274 @@
     });
   }
 
+  /* -- scroll-driven animation engine (1.7.1) --------------------------
+     Makes CSS scroll-driven animations (animation-timeline: view() /
+     scroll() / a named timeline, plus animation-range) look the same in
+     Safari as in Chrome. The CSS stays the single source of truth: every
+     scroll-driven rule also declares
+         --flwr-sd-timeline: <what animation-timeline says>;   view(), scroll(root block), --name
+         --flwr-sd-range:    <what animation-range says>;      entry 0% cover 30%   (default: normal)
+     and the rule that defines a named timeline also declares
+         --flwr-sd-timeline-name: --name;   --flwr-sd-timeline-axis: block|inline;
+         [--flwr-sd-timeline-kind: scroll]  (default view)   [--flwr-sd-timeline-inset: 20px 10%]
+     Custom properties survive every engine, so this works where the
+     animation-timeline declaration itself is dropped (older Safari) or
+     misbehaves (Safari 26). The engine runs only on Apple WebKit (desktop and
+     every iOS browser), when animation-timeline is unsupported, or with
+     ?scrollengine=js; ?scrollengine=native turns it off. When it runs it takes
+     the element's CSS animations (also on ::before / ::after), gives them a
+     1s document timeline, pauses them, and sets currentTime = progress * 1s on
+     scroll / resize, with the progress the CSS spec defines (cover, contain,
+     entry, exit, entry-crossing, exit-crossing, % and px offsets). Keyframes,
+     easing, iteration and fill stay the CSS's. Limits: block/inline assume
+     horizontal-tb ltr; a ::before/::after view() measures its host element; a
+     named timeline must sit on an ancestor (or the element itself). */
+  var SD_NAMES = { cover: 1, contain: 1, entry: 1, exit: 1, 'entry-crossing': 1, 'exit-crossing': 1 };
+  var SD_PROPS = ['timeline', 'range', 'timeline-name', 'timeline-axis', 'timeline-kind', 'timeline-inset'];
+  var sdRegistered = false;
+
+  function sdWanted() {
+    var m = (/[?&]scrollengine=([a-z]+)/.exec(location.search) || [])[1];
+    if (m === 'native' || !document.getAnimations) return false;
+    if (m === 'js') return true;
+    var ua = navigator.userAgent || '';
+    var webkit = /AppleWebKit/.test(ua);
+    var ios = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    var safari = webkit && /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|FxiOS|Android/.test(ua);
+    return safari || (ios && webkit) || !(window.CSS && CSS.supports && CSS.supports('animation-timeline', 'view()'));
+  }
+  function sdTok(s) { return (s || '').trim().split(/\s+/).filter(Boolean); }
+  function sdLen(t, base) {
+    var n = parseFloat(t);
+    if (isNaN(n)) return 0;
+    if (/%$/.test(t)) return n / 100 * base;
+    return /rem$/.test(t) ? n * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) : n;
+  }
+  function sdAxis(w) { return (w === 'x' || w === 'inline') ? 'x' : 'y'; }
+  function sdParseTimeline(txt) {
+    txt = (txt || '').trim();
+    var m = /^(view|scroll)\(([^)]*)\)$/.exec(txt), o;
+    if (m) {
+      o = { kind: m[1], axis: 'y', scroller: 'nearest', inset: [] };
+      sdTok(m[2]).forEach(function (w) {
+        if (/^(x|y|block|inline)$/.test(w)) o.axis = sdAxis(w);
+        else if (/^(root|nearest|self)$/.test(w)) o.scroller = w;
+        else o.inset.push(w);
+      });
+      return o;
+    }
+    return /^--/.test(txt) ? { kind: 'named', name: txt, inset: [] } : null;
+  }
+  /* animation-range -> [start, end], each { n: range name or '', o: offset or null, end: bool } */
+  function sdParseRange(txt) {
+    var items = [];
+    sdTok(txt).forEach(function (w) {
+      var p = items[items.length - 1];
+      if (SD_NAMES[w]) items.push({ n: w, o: null });
+      else if (w === 'normal') items.push({ n: '', o: null });
+      else if (p && p.n && p.o === null) p.o = w;
+      else items.push({ n: '', o: w });
+    });
+    var s = items[0] || { n: '', o: null }, e = items[1];
+    if (!e) e = (s.n && s.o === null) ? { n: s.n, o: '100%' } : { n: '', o: null };
+    e.end = 1;
+    return [s, e];
+  }
+  function sdScrollerOf(el, mode) {
+    var root = document.documentElement;
+    if (mode === 'root') return root;
+    if (mode === 'self') return el;
+    for (var p = el.parentElement; p && p !== root; p = p.parentElement) {
+      if (p === document.body) continue;
+      var cs = getComputedStyle(p);
+      if (/auto|scroll|hidden/.test(cs.overflowX + cs.overflowY)) return p;
+    }
+    return root;
+  }
+  /* scrollport size v, scroll range mx, content origin o and scroll offset s of a scroller */
+  function sdBox(sc, x) {
+    var root = sc === document.documentElement, se = root ? (document.scrollingElement || sc) : sc, v = x ? sc.clientWidth : sc.clientHeight, o = 0, r;
+    if (!root) { r = sc.getBoundingClientRect(); o = x ? r.left + sc.clientLeft : r.top + sc.clientTop; }
+    return { v: v, mx: (x ? se.scrollWidth : se.scrollHeight) - v, o: o, s: x ? se.scrollLeft : se.scrollTop };
+  }
+  /* named view-timeline ranges, as scroll offsets; g = { e: subject size, cs: cover start, ce: cover end } */
+  function sdViewRange(g, n) {
+    var ent = g.cs + g.e, ext = g.ce - g.e, c0 = Math.min(ent, ext), c1 = Math.max(ent, ext);
+    return n === 'contain' ? [c0, c1] : n === 'entry' ? [g.cs, c0] : n === 'exit' ? [c1, g.ce] :
+      n === 'entry-crossing' ? [g.cs, ent] : n === 'exit-crossing' ? [ext, g.ce] : [g.cs, g.ce];
+  }
+  function sdOffset(it, r) {
+    var o = it.o === null ? (it.end ? '100%' : '0%') : it.o;
+    return /%$/.test(o) ? r[0] + parseFloat(o) / 100 * (r[1] - r[0]) : r[0] + sdLen(o, 0);
+  }
+
+  function initScrollEngine(scope) {
+    if (!sdWanted()) return;
+    var c = begin('scrollEngine');
+    var own = c.owned.get(document);
+    var start = (scope && scope.nodeType === 1) ? scope : (document.body || document.documentElement);
+    if (own) { own.scan(start); return; }
+    var u = unit(c, document), root = document.documentElement;
+    var items = [], byEl = new WeakMap(), fills = new WeakMap(), pending = [], raf = 0, dirty = true;
+    var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (!sdRegistered) {
+      sdRegistered = true;
+      SD_PROPS.forEach(function (p) {
+        try { CSS.registerProperty({ name: '--flwr-sd-' + p, syntax: '*', inherits: false }); } catch (_) {}
+      });
+    }
+    var st = document.head.appendChild(document.createElement('style'));
+    st.textContent = '[data-flwr-sd~="self"],[data-flwr-sd~="before"]::before,[data-flwr-sd~="after"]::after{animation-timeline:auto!important;animation-duration:1s!important;animation-play-state:paused!important}';
+    u.undo(function () {
+      st.remove();
+      items.forEach(function (it) { it.el.removeAttribute('data-flwr-sd'); });
+      items = [];
+    });
+    u.attr(root, 'data-flwr-scroll-engine', 'on');
+
+    function read(el, ps) {
+      var cs = getComputedStyle(el, ps || null), t = cs.getPropertyValue('--flwr-sd-timeline').trim(), spec;
+      if (!t || t === 'none' || t === 'auto' || !(spec = sdParseTimeline(t))) return null;
+      if (reduce && !el.closest('[data-flwr-motion~="keep"]')) return null;
+      var rg = cs.getPropertyValue('--flwr-sd-range');
+      spec.range = sdParseRange(rg);
+      spec.key = t + '|' + rg + '|' + cs.getPropertyValue('--flwr-sd-timeline-name');
+      return spec;
+    }
+    function scanEl(el) {
+      var m = byEl.get(el), flags = [];
+      ['', '::before', '::after'].forEach(function (ps, i) {
+        var spec = read(el, ps), it = m && m[ps];
+        if (it && (!spec || it.spec.key !== spec.key)) { items.splice(items.indexOf(it), 1); delete m[ps]; it = null; dirty = true; }
+        if (spec && !it) {
+          if (!m) byEl.set(el, m = {});
+          m[ps] = it = { el: el, ps: ps, spec: spec, anims: [], last: NaN };
+          items.push(it); dirty = true;
+        }
+        if (it) flags.push(['self', 'before', 'after'][i]);
+      });
+      var prev = el.getAttribute('data-flwr-sd'), now = flags.join(' ');
+      if (!now) { if (prev !== null) el.removeAttribute('data-flwr-sd'); return; }
+      if (prev === now) return;
+      el.setAttribute('data-flwr-sd', now);
+      /* the timeline switch idles an animation at the next frame; pinning it to 0 now keeps it alive */
+      document.getAnimations().forEach(function (a) { if (a.effect && a.effect.target === el && a.animationName !== undefined) a.currentTime = 0; });
+      dirty = true;
+    }
+    function scan(node) {
+      scanEl(node);
+      var all = node.querySelectorAll('*');
+      for (var i = 0; i < all.length; i++) scanEl(all[i]);
+      schedule();
+    }
+    u.scan = scan;
+    u.dump = function () { return items.map(function (it) { return { el: it.el, ps: it.ps, on: it.on, a: it.a, b: it.b, kind: it.kind, last: it.last, anims: it.anims.length }; }); };
+
+    function definer(el, name) { /* named timeline: the nearest ancestor-or-self that declares it */
+      for (var p = el; p; p = p.parentElement) {
+        if (getComputedStyle(p).getPropertyValue('--flwr-sd-timeline-name').trim() === name) return p;
+      }
+      return null;
+    }
+    function measure() {
+      dirty = false;
+      items = items.filter(function (it) { return it.el.isConnected; });
+      items.forEach(function (it) { it.anims = []; });
+      var saved = [];
+      document.getAnimations().forEach(function (a) {
+        var ef = a.effect, m = ef && ef.target && byEl.get(ef.target), it = m && a.animationName !== undefined && m[ef.pseudoElement || ''];
+        if (!it) return;
+        it.anims.push(a);
+        if (!fills.has(a)) fills.set(a, ef.getTiming().fill);
+        /* measure the untransformed layout: suspend the effect while reading boxes */
+        saved.push([a, a.currentTime]);
+        ef.updateTiming({ fill: 'none' });
+        a.currentTime = -1;
+      });
+      items.forEach(function (it) {
+        var sp = it.spec, el = it.el, subj = el, x = sp.axis === 'x', inset = sp.inset, kind = sp.kind, sc, nm;
+        it.on = false;
+        if (kind === 'named') {
+          if (!(nm = definer(el, sp.name))) return;
+          var cs = getComputedStyle(nm);
+          x = sdAxis(cs.getPropertyValue('--flwr-sd-timeline-axis').trim()) === 'x';
+          kind = cs.getPropertyValue('--flwr-sd-timeline-kind').trim() === 'scroll' ? 'scroll' : 'view';
+          inset = sdTok(cs.getPropertyValue('--flwr-sd-timeline-inset'));
+          subj = nm;
+          sc = kind === 'scroll' ? nm : sdScrollerOf(nm, 'nearest');
+        } else sc = sdScrollerOf(el, sp.scroller);
+        var b = sdBox(sc, x), rg = sp.range;
+        it.sc = sc; it.x = x; it.kind = kind; it.sig = b.v + '/' + b.mx;
+        if (b.mx <= 0 && (kind === 'scroll' || sc !== root)) return;
+        if (kind === 'view') {
+          var r = subj.getBoundingClientRect(), t = (x ? r.left : r.top) - b.o + b.s, e = x ? r.width : r.height;
+          var ia = inset[0] && inset[0] !== 'auto' ? sdLen(inset[0], b.v) : 0;
+          var ib = inset[1] && inset[1] !== 'auto' ? sdLen(inset[1], b.v) : ia;
+          var g = { e: e, cs: t - b.v + ib, ce: t + e - ia };
+          it.a = sdOffset(rg[0], sdViewRange(g, rg[0].n));
+          it.b = sdOffset(rg[1], sdViewRange(g, rg[1].n));
+        } else {
+          it.a = sdOffset(rg[0], [0, b.mx]);
+          it.b = sdOffset(rg[1], [0, b.mx]);
+        }
+        it.on = true;
+        ro.observe(subj);
+        if (sc !== root) ro.observe(sc);
+      });
+      saved.forEach(function (s) { s[0].effect.updateTiming({ fill: fills.get(s[0]) }); s[0].currentTime = s[1] == null ? 0 : s[1]; });
+      items.forEach(function (it) { it.last = NaN; it.state = ''; });
+    }
+    function frame() {
+      raf = 0;
+      if (dirty) measure();
+      var boxes = [new Map(), new Map()];
+      items.forEach(function (it) {
+        var bx = null, p = -1, on = it.on;
+        if (it.sc) {
+          var bm = boxes[+it.x];
+          bx = bm.get(it.sc);
+          if (!bx) bm.set(it.sc, bx = sdBox(it.sc, it.x));
+          if (it.sig !== bx.v + '/' + bx.mx) dirty = true; /* scroller resized: re-measure next frame */
+        }
+        if (on) {
+          p = it.b === it.a ? (bx.s >= it.b ? 1 : 0) : (bx.s - it.a) / (it.b - it.a);
+          if (p === 1 && it.kind === 'scroll') p = 1 - 1e-6;
+        }
+        var want = on ? 'on' : 'off';
+        if (p === it.last && want === it.state) return;
+        it.last = p;
+        it.anims.forEach(function (a) {
+          if (want !== it.state) a.effect.updateTiming({ fill: on ? fills.get(a) : 'none' });
+          a.currentTime = on ? p * 1000 : -1;
+        });
+        it.state = want;
+      });
+      if (dirty) schedule();
+    }
+    function schedule() { if (!raf) raf = u.raf(function () { frame(); }); }
+    function relayout() { dirty = true; schedule(); }
+
+    var ro = u.observe(new ResizeObserver(relayout));
+    ro.observe(root); ro.observe(document.body);
+    u.on(document, 'scroll', schedule, { passive: true, capture: true });
+    u.on(window, 'resize', relayout, { passive: true });
+    u.on(window, 'load', relayout);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!u.dead) relayout(); });
+    var mo = u.observe(new MutationObserver(function (recs) {
+      recs.forEach(function (r) {
+        if (r.type === 'attributes') pending.push([r.target, 0]);
+        else [].forEach.call(r.addedNodes, function (n) { if (n.nodeType === 1) pending.push([n, 1]); });
+      });
+      u.raf(function () {
+        var list = pending; pending = [];
+        list.forEach(function (p) { if (p[0].isConnected) { if (p[1]) scan(p[0]); else scanEl(p[0]); } });
+        relayout();
+      });
+    }));
+    mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'data-flwr-motion'] });
+    scan(start);
+  }
+
   /* -- public API ------------------------------------------------------- */
 
   function destroyer(name) {
@@ -2214,6 +2484,9 @@
   window.flwr.list           = { init: initList,          destroy: destroyer('list') };
   window.flwr.adaptTheme     = { init: initAdaptTheme,    destroy: destroyer('adaptTheme') };
   window.flwr.scrollHover    = { init: initScrollHover,   destroy: destroyer('scrollHover') };
+  window.flwr.scrollEngine   = { init: initScrollEngine,  destroy: destroyer('scrollEngine'),
+                                 refresh: function () { initScrollEngine(document.body); },
+                                 items: function () { var o = registry.scrollEngine && registry.scrollEngine.owned.get(document); return o ? o.dump() : []; } };
 
   /* -- bootstrap -------------------------------------------------------- */
 
@@ -2252,7 +2525,8 @@
     ['verticalText',   initVerticalText],
     ['list',           initList],
     ['adaptTheme',     initAdaptTheme],
-    ['scrollHover',    initScrollHover]
+    ['scrollHover',    initScrollHover],
+    ['scrollEngine',   initScrollEngine]
   ];
 
   function init(scope) {

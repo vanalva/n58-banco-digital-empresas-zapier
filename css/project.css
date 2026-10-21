@@ -4205,13 +4205,15 @@ body {
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME MOTION — micro-interactions + scroll choreography
    ───────────────────────────────────────────────────────────────────────────
-   All scroll-linked motion uses native CSS scroll-driven animations (the flwr
-   way — compositor thread, zero JS). Every scrubbed keyframe animates FROM a
-   hidden state TO the element's natural state, so browsers without
-   `animation-timeline` (and reduce-motion users, via the media gate) simply
-   render the final, static design. Anything whose END state is not the natural
-   design (hero exit, progress bar, sticky mask scene) is additionally guarded
-   behind @supports (animation-timeline: view()).
+   All scroll-linked motion uses CSS scroll-driven animations (the flwr way).
+   Chrome runs them natively on the compositor; Safari / iOS WebKit / browsers
+   without `animation-timeline` run the SAME keyframes and ranges through the
+   flwr scroll engine (runtime.js 1.7.1). Contract: every rule that sets
+   `animation-timeline` also declares `--flwr-sd-timeline` (+ `--flwr-sd-range`
+   when it sets `animation-range`); the rule that defines a named timeline
+   declares `--flwr-sd-timeline-name` / `-axis`. Keep each value identical to
+   its native twin. Most keyframes animate FROM a hidden state TO the natural
+   state; reduce-motion users get the final, static design via the media gate.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -4328,24 +4330,26 @@ body {
    ───────────────────────────────────────────────────────────────────────── */
 .n58-scroll-progress { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    [data-flwr] .n58-scroll-progress {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background-color: var(--_palette---core--500);
-      transform: scaleX(0);
-      transform-origin: 0 50%;
-      z-index: 1300;              /* above the z-1200 navbar */
-      pointer-events: none;
-      animation-name: n58-progress;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: scroll(root block);
-    }
+  /* No @supports gate: where animation-timeline is missing or buggy (Safari,
+     iOS WebKit, Firefox) the flwr scroll engine (runtime.js) reads the
+     --flwr-sd-* contract below and drives the same keyframes. */
+  [data-flwr] .n58-scroll-progress {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--_palette---core--500);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    z-index: 1300;              /* above the z-1200 navbar */
+    pointer-events: none;
+    animation-name: n58-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root block);
+    --flwr-sd-timeline: scroll(root block);
   }
 }
 @keyframes n58-progress {
@@ -4501,14 +4505,14 @@ body {
   }
 
   /* Exit — scrubbed by the hero's own view timeline as it leaves the top. */
-  @supports (animation-timeline: view()) {
-    [data-flwr] .home-split.n58-hero_split {
-      animation-name: n58-hero-out;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: view();
-      animation-range: exit 5% exit 85%;
-    }
+  [data-flwr] .home-split.n58-hero_split {
+    animation-name: n58-hero-out;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: view();
+    animation-range: exit 5% exit 85%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: exit 5% exit 85%;
   }
 }
 @keyframes n58-hero-in {
@@ -4552,10 +4556,12 @@ body {
     animation-fill-mode: both;
     animation-timeline: view();
     animation-range: entry 0% cover 30%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: entry 0% cover 30%;
   }
-  [data-flwr] .n58-reveal.is-2 { animation-range: entry 8% cover 36%; }
-  [data-flwr] .n58-reveal.is-3 { animation-range: entry 16% cover 42%; }
-  [data-flwr] .n58-reveal.is-4 { animation-range: entry 24% cover 48%; }
+  [data-flwr] .n58-reveal.is-2 { animation-range: entry 8% cover 36%;  --flwr-sd-range: entry 8% cover 36%; }
+  [data-flwr] .n58-reveal.is-3 { animation-range: entry 16% cover 42%; --flwr-sd-range: entry 16% cover 42%; }
+  [data-flwr] .n58-reveal.is-4 { animation-range: entry 24% cover 48%; --flwr-sd-range: entry 24% cover 48%; }
 
   [data-flwr] .n58-reveal-stack_item {
     animation-name: n58-rise;
@@ -4563,10 +4569,12 @@ body {
     animation-fill-mode: both;
     animation-timeline: view();
     animation-range: entry 0% cover 25%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: entry 0% cover 25%;
   }
-  [data-flwr] .n58-reveal-stack_item--2    { animation-range: entry 8% cover 33%; }
-  [data-flwr] .n58-reveal-stack_item--3    { animation-range: entry 16% cover 41%; }
-  [data-flwr] .n58-reveal-stack_item--4  { animation-range: entry 24% cover 49%; }
+  [data-flwr] .n58-reveal-stack_item--2  { animation-range: entry 8% cover 33%;  --flwr-sd-range: entry 8% cover 33%; }
+  [data-flwr] .n58-reveal-stack_item--3  { animation-range: entry 16% cover 41%; --flwr-sd-range: entry 16% cover 41%; }
+  [data-flwr] .n58-reveal-stack_item--4  { animation-range: entry 24% cover 49%; --flwr-sd-range: entry 24% cover 49%; }
 
   [data-flwr] .n58-reveal-media {
     animation-name: n58-mask-wipe;
@@ -4574,6 +4582,8 @@ body {
     animation-fill-mode: both;
     animation-timeline: view();
     animation-range: entry 0% cover 35%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: entry 0% cover 35%;
   }
   [data-flwr] .home-media_img.n58-reveal-media_img {
     animation-name: n58-img-settle;
@@ -4581,6 +4591,8 @@ body {
     animation-fill-mode: both;
     animation-timeline: view();
     animation-range: entry 0% cover 45%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: entry 0% cover 45%;
   }
 
   [data-flwr] .n58-reveal-list_item {
@@ -4589,6 +4601,8 @@ body {
     animation-fill-mode: both;
     animation-timeline: view();
     animation-range: entry 0% cover 30%;
+    --flwr-sd-timeline: view();
+    --flwr-sd-range: entry 0% cover 30%;
   }
 }
 @keyframes n58-rise {
@@ -4667,213 +4681,178 @@ body {
   will-change: transform;
 }
 
-/* Native CSS scroll-driven scene — ONLY on fine-pointer devices (desktop). It's
-   gated away from touch on purpose: even Safari versions that report
-   animation-timeline support have driven this unreliably on phones, so all touch
-   devices use the JS driver below (n58-bleed-scene.js) instead. */
-@media (prefers-reduced-motion: no-preference) and (pointer: fine) {
-  @supports (animation-timeline: view()) {
-    .n58-bleed-pin {
-      height: 260vh;
-      padding-top: 0;
-      padding-bottom: 0;
-      padding-left: 0;
-      padding-right: 0;
-      view-timeline-name: --n58-bleed;
-      view-timeline-axis: block;
-    }
-    /* Sticky flex-centers the real-size card. */
-    .n58-bleed-sticky {
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow-x: clip;
-      overflow-y: clip;
-    }
-    /* ── Real-size card grow — the gallery-card recipe, animated ────────────
-       The card is an ACTUALLY-SIZED element whose real width/height scrub on
-       the timeline (keyframes below). A constant 28px border-radius rounds the
-       box + children (base .home-bleed overflow hidden); a STATIC percent-based
-       notch polygon cuts only the top-right --n58-bleed-slant slice — the two
-       clips INTERSECT, so the radius survives at every corner the polygon
-       doesn't bite. Notch + radius ride along at every frame (exactly how
-       .n58-gallery-card is built). Same contain 10%→55% range as the old grow;
-       only the animated property changed (real size, not a clip inset). */
-    [data-flwr] .home-bleed.n58-bleed-grow {
-      /* Start: small centered card. */
-      --n58-bleed-inset-y: 24vh;
-      --n58-bleed-inset-x: 18vw;
-      /* End: STOP here — a large framed card, NOT edge-to-edge full screen.
-         ONE fixed length for all four sides so the cream frame is EQUAL all
-         around (vh≠vw on a landscape screen made the sides thicker). Raise for a
-         thicker frame, lower toward 0 to fill more. */
-      --n58-bleed-end: 2.25rem;
-      /* Roundness + notch stay constant the whole scroll. */
-      --n58-bleed-radius: var(--_radius---modal);
-      --n58-bleed-slant: 2rem;
-      /* border-box is load-bearing: the base .home-bleed padding would otherwise
-         inflate the sized box past its calc footprint. */
-      box-sizing: border-box;
-      max-width: none;
-      min-height: 0;
-      /* The card centres in the sticky, but the fixed navbar overlays its top —
-         so bias the copy down to centre it in the VISIBLE area below the navbar
-         (also reads more optically-centred under the big heading). Tune this:
-         raise toward the full navbar height to sit lower, 0 for true centre. */
-      --n58-bleed-content-drop: calc(var(--_component---navbar--height-total) / 2);
-      padding-top: calc(var(--_spacing---step--8) + var(--n58-bleed-content-drop));
-      border-top-left-radius: var(--n58-bleed-radius);
-      border-top-right-radius: var(--n58-bleed-radius);
-      border-bottom-left-radius: var(--n58-bleed-radius);
-      border-bottom-right-radius: var(--n58-bleed-radius);
-      clip-path: polygon(0 0, calc(100% - var(--n58-bleed-slant)) 0, 100% var(--n58-bleed-slant), 100% 100%, 0% 100%, 0% 0%);
-      animation-name: n58-bleed-size;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      /* Hold the small centered card for the first beat of the pin, THEN grow. */
-      animation-range: contain 10% contain 55%;
-    }
-    [data-flwr] .home-bleed_img.n58-bleed-grow_img {
-      animation-name: n58-bleed-img;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: contain 0% contain 65%;
-    }
-
-    /* ── Badge-slot teaser — show + choreograph ────────────────────────────
-       Overlay lives ON the card (inside .home-bleed, clipped by the notch mask).
-       Whole-teaser EXIT is scrubbed contain 24%→34%. */
-    .n58-bleed-slot {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 2;
-      pointer-events: none;
-      animation-name: n58-bleed-slot-out;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: contain 24% contain 34%;
-    }
-    /* Shape wipes in LEFT→RIGHT (right inset shrinks 100%→0). No scale, so the
-       SVG end caps are revealed at full fidelity, never squashed. fill-mode both
-       back-fills the fully-clipped "from" so nothing shows early. */
-    .n58-bleed-slot-unit::before {
-      animation-name: n58-bleed-slot-wipe;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: entry 40% contain 6%;
-    }
-    /* Title climbs out of the slot (paper-from-slot). */
-    .n58-bleed-slot-title {
-      animation-name: n58-bleed-slot-rise;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: contain 6% contain 20%;
-    }
-    /* Slot clip exists ONLY during the rise: its bottom edge holds at the bar's
-       vertical middle (hiding the title "inside" the shape), then RELEASES
-       downward past the bar right as the rise completes, so the landed title is
-       fully unclipped on top of the shape. Negative top/side insets keep
-       ascenders + cap overhang unclipped mid-rise. */
-    .n58-bleed-slot-mask {
-      animation-name: n58-bleed-slot-release;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: contain 18% contain 24%;
-    }
-
-    /* Real copy rises in AFTER the teaser exits (base mechanism = n58-rise;
-       ranges pushed later so the handoff doesn't overlap the teaser exit). */
-    [data-flwr] .n58-bleed-copy {
-      animation-name: n58-rise;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --n58-bleed;
-      animation-range: contain 36% contain 68%;
-    }
-    [data-flwr] .n58-bleed-copy--2 { animation-range: contain 44% contain 76%; }
-    [data-flwr] .n58-bleed-copy--3 { animation-range: contain 52% contain 84%; }
-
-    /* Mobile scene tuning — KEEP the scroll scene (don't disable it), but retune
-       the geometry for a phone. The desktop insets (18vw / 24vh) shrink the start
-       card far below the heading width, clipping the teaser title. Start near
-       full width and grow mostly in height, so the copy always fits inside the
-       card at every frame. Shorter pin = snappier scrub on a small screen. */
-    @media (max-width: 991px) {
-      [data-flwr] .home-bleed.n58-bleed-grow {
-        --n58-bleed-inset-x: 3vw;
-        --n58-bleed-inset-y: 9vh;
-        --n58-bleed-end: 0.75rem;
-      }
-      .n58-bleed-pin { height: 220vh; }
-    }
+/* The scroll-driven scene, on EVERY device (no pointer gate, no @supports gate).
+   Chrome / Android Chrome run it natively; Safari, iOS WebKit (every iOS
+   browser) and any browser without animation-timeline run the SAME keyframes
+   and ranges through the flwr scroll engine (runtime.js): each animated rule
+   below also declares --flwr-sd-timeline / --flwr-sd-range, and the pin that
+   defines the named timeline declares --flwr-sd-timeline-name / -axis. Reduced
+   motion keeps the static framed card (base rules above). */
+@media (prefers-reduced-motion: no-preference) {
+  .n58-bleed-pin {
+    height: 260vh;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    view-timeline-name: --n58-bleed;
+    view-timeline-axis: block;
+    --flwr-sd-timeline-name: --n58-bleed;
+    --flwr-sd-timeline-axis: block;
   }
-}
-
-/* Browsers WITHOUT scroll-driven animations (e.g. older iOS Safari) can't run
-   the pinned mask-grow scene at all. Give ONLY those browsers the plain static
-   framed card — at every width — so the base position:sticky never leaves the
-   card stuck/"fixed" on those devices. Capable browsers (incl. modern mobile
-   Chrome/Safari) run the scroll scene above on ALL screen sizes. */
-@supports not (animation-timeline: view()) {
-  /* Default (JS not running): plain static framed card, no pin, no stuck sticky. */
+  /* Sticky flex-centers the real-size card. */
   .n58-bleed-sticky {
-    position: static;
-    height: auto;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: clip;
+    overflow-y: clip;
   }
+  /* ── Real-size card grow — the gallery-card recipe, animated ────────────
+     The card is an ACTUALLY-SIZED element whose real width/height scrub on
+     the timeline (keyframes below). A constant 28px border-radius rounds the
+     box + children (base .home-bleed overflow hidden); a STATIC percent-based
+     notch polygon cuts only the top-right --n58-bleed-slant slice — the two
+     clips INTERSECT, so the radius survives at every corner the polygon
+     doesn't bite. Notch + radius ride along at every frame (exactly how
+     .n58-gallery-card is built). Same contain 10%→55% range as the old grow;
+     only the animated property changed (real size, not a clip inset). */
   [data-flwr] .home-bleed.n58-bleed-grow {
-    width: auto;
-    height: auto;
+    /* Start: small centered card. */
+    --n58-bleed-inset-y: 24vh;
+    --n58-bleed-inset-x: 18vw;
+    /* End: STOP here — a large framed card, NOT edge-to-edge full screen.
+       ONE fixed length for all four sides so the cream frame is EQUAL all
+       around (vh≠vw on a landscape screen made the sides thicker). Raise for a
+       thicker frame, lower toward 0 to fill more. */
+    --n58-bleed-end: 2.25rem;
+    /* Roundness + notch stay constant the whole scroll. */
+    --n58-bleed-radius: var(--_radius---modal);
+    --n58-bleed-slant: 2rem;
+    /* border-box is load-bearing: the base .home-bleed padding would otherwise
+       inflate the sized box past its calc footprint. */
+    box-sizing: border-box;
+    max-width: none;
     min-height: 0;
-    max-width: var(--n58-container-max);
-    margin-left: auto;
-    margin-right: auto;
+    /* The card centres in the sticky, but the fixed navbar overlays its top —
+       so bias the copy down to centre it in the VISIBLE area below the navbar
+       (also reads more optically-centred under the big heading). Tune this:
+       raise toward the full navbar height to sit lower, 0 for true centre. */
+    --n58-bleed-content-drop: calc(var(--_component---navbar--height-total) / 2);
+    padding-top: calc(var(--_spacing---step--8) + var(--n58-bleed-content-drop));
+    border-top-left-radius: var(--n58-bleed-radius);
+    border-top-right-radius: var(--n58-bleed-radius);
+    border-bottom-left-radius: var(--n58-bleed-radius);
+    border-bottom-right-radius: var(--n58-bleed-radius);
+    clip-path: polygon(0 0, calc(100% - var(--n58-bleed-slant)) 0, 100% var(--n58-bleed-slant), 100% 100%, 0% 100%, 0% 0%);
+    animation-name: n58-bleed-size;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    /* Hold the small centered card for the first beat of the pin, THEN grow. */
+    animation-range: contain 10% contain 55%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 10% contain 55%;
   }
-  .n58-bleed-slot { display: none; }
-}
+  [data-flwr] .home-bleed_img.n58-bleed-grow_img {
+    animation-name: n58-bleed-img;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: contain 0% contain 65%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 0% contain 65%;
+  }
 
-/* JS-DRIVEN PIN (touch devices + any browser without native scroll timelines) —
-   n58-bleed-scene.js adds .n58-bleed-js and feeds per-phase scroll-progress vars
-   (--n58-p-*) per pin. We rebuild the ENTIRE desktop choreography from those vars
-   with plain calc() interpolation, so the full scene plays reliably on EVERY
-   phone regardless of Safari's animation-timeline support/bugs. Every phase below
-   mirrors a native @keyframes above (n58-bleed-size / -img / -slot-wipe / -rise /
-   -release / -slot-out / n58-rise). Class-gated (not @supports), so it activates
-   wherever the JS decides native won't run.
+  /* ── Badge-slot teaser — show + choreograph ────────────────────────────
+     Overlay lives ON the card (inside .home-bleed, clipped by the notch mask).
+     Whole-teaser EXIT is scrubbed contain 24%→34%. */
+  .n58-bleed-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+    animation-name: n58-bleed-slot-out;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: contain 24% contain 34%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 24% contain 34%;
+  }
+  /* Shape wipes in LEFT→RIGHT (right inset shrinks 100%→0). No scale, so the
+     SVG end caps are revealed at full fidelity, never squashed. fill-mode both
+     back-fills the fully-clipped "from" so nothing shows early. */
+  .n58-bleed-slot-unit::before {
+    animation-name: n58-bleed-slot-wipe;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: entry 40% contain 6%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: entry 40% contain 6%;
+  }
+  /* Title climbs out of the slot (paper-from-slot). */
+  .n58-bleed-slot-title {
+    animation-name: n58-bleed-slot-rise;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: contain 6% contain 20%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 6% contain 20%;
+  }
+  /* Slot clip exists ONLY during the rise: its bottom edge holds at the bar's
+     vertical middle (hiding the title "inside" the shape), then RELEASES
+     downward past the bar right as the rise completes, so the landed title is
+     fully unclipped on top of the shape. Negative top/side insets keep
+     ascenders + cap overhang unclipped mid-rise. */
+  .n58-bleed-slot-mask {
+    animation-name: n58-bleed-slot-release;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: contain 18% contain 24%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 18% contain 24%;
+  }
 
-   Mobile geometry: the card starts almost FLAT (~4:2) and grows tall — that's the
-   phone read of the desktop "small card → big framed card" grow. */
-.n58-bleed-js.n58-bleed-pin {
-  /* Short pin = minimal dead scroll. Just enough travel to scrub the whole
-     choreography at a comfortable pace. */
-  height: 175vh;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 0;
-  padding-right: 0;
+  /* Real copy rises in AFTER the teaser exits (base mechanism = n58-rise;
+     ranges pushed later so the handoff doesn't overlap the teaser exit). */
+  [data-flwr] .n58-bleed-copy {
+    animation-name: n58-rise;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --n58-bleed;
+    animation-range: contain 36% contain 68%;
+    --flwr-sd-timeline: --n58-bleed;
+    --flwr-sd-range: contain 36% contain 68%;
+  }
+  [data-flwr] .n58-bleed-copy--2 { animation-range: contain 44% contain 76%; --flwr-sd-range: contain 44% contain 76%; }
+  [data-flwr] .n58-bleed-copy--3 { animation-range: contain 52% contain 84%; --flwr-sd-range: contain 52% contain 84%; }
+
+  /* Mobile scene tuning — KEEP the scroll scene (don't disable it), but retune
+     the geometry for a phone. The desktop insets (18vw / 24vh) shrink the start
+     card far below the heading width, clipping the teaser title. Start near
+     full width and grow mostly in height, so the copy always fits inside the
+     card at every frame. Shorter pin = snappier scrub on a small screen. */
+  @media (max-width: 991px) {
+    [data-flwr] .home-bleed.n58-bleed-grow {
+      --n58-bleed-inset-x: 3vw;
+      --n58-bleed-inset-y: 9vh;
+      --n58-bleed-end: 0.75rem;
+    }
+    .n58-bleed-pin { height: 220vh; }
+  }
 }
-/* Card grow — starts a bit taller than a hard 4:2 (inset-y 26vh → the card fills
-   more of the viewport, so far less cream above/below the centered card) and
-   grows to the tall framed card (inset 0.75rem). */
-/* Photo settles from 1.25× → 1× (mirrors n58-bleed-img). */
-/* Badge-slot teaser — visible on the JS path and choreographed by calc(). */
-/* Shape wipes in left→right — the SVG end-caps reveal at full fidelity. */
-/* Word climbs out of the slot (mirrors n58-bleed-slot-rise; ease applied in JS). */
-/* Slot clip releases downward past the bar (mirrors n58-bleed-slot-release). */
-/* Real copy rises in, staggered (mirrors n58-rise + the nth-child ranges). */
 
 /* ── Keyframes ─────────────────────────────────────────────────────────────
    Real card size: the card's actual width/height scrub from the resting
@@ -6750,74 +6729,6 @@ html.n58-zapier-open body {
   font-size: 1rem;
   line-height: normal;
 }
-/* n58-bleed-scene.js adds .n58-bleed-js to the pin wrapper when native scroll timelines are unavailable: a class-gated alternative layout for six descendants (JS-mode gate, no static class can express it) */
-.n58-bleed-js .n58-bleed-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-x: clip;
-  overflow-y: clip;
-}
-[data-flwr] .n58-bleed-js .home-bleed.n58-bleed-grow {
-  box-sizing: border-box;
-  min-height: 0;
-  max-width: none;
-  margin-left: 0;
-  margin-right: 0;
-  --n58-js-inset-x: calc(3vw + (0.75rem - 3vw) * var(--n58-p-size, 0));
-  --n58-js-inset-y: calc(26vh + (0.75rem - 26vh) * var(--n58-p-size, 0));
-  width: calc(100% - 2 * var(--n58-js-inset-x));
-  height: calc(100% - 2 * var(--n58-js-inset-y));
-  border-top-left-radius: var(--_radius---modal);
-  border-top-right-radius: var(--_radius---modal);
-  border-bottom-left-radius: var(--_radius---modal);
-  border-bottom-right-radius: var(--_radius---modal);
-  clip-path: polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 0% 100%, 0% 0%);
-}
-[data-flwr] .n58-bleed-js .home-bleed_img {
-  transform: scale(calc(1.25 + (1 - 1.25) * var(--n58-p-img, 0)));
-  transform-origin: center center;
-}
-.n58-bleed-js .n58-bleed-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 2;
-  pointer-events: none;
-  /* whole teaser fades + lifts out (mirrors n58-bleed-slot-out). */
-  opacity: calc(1 - var(--n58-p-out, 0));
-  transform: translateY(calc(var(--n58-p-out, 0) * -1.4rem));
-}
-.n58-bleed-js .n58-bleed-slot-unit::before {
-  clip-path: inset(0 calc((1 - var(--n58-p-wipe, 0)) * 100%) 0 0);
-}
-.n58-bleed-js .n58-bleed-slot-title {
-  transform: translateY(calc((1 - var(--n58-p-rise, 0)) * 108%));
-}
-.n58-bleed-js .n58-bleed-slot-mask {
-  clip-path: inset(-0.6em -0.3em calc(0.03em - 1.23em * var(--n58-p-release, 0)) -0.3em);
-}
-[data-flwr] .n58-bleed-js .home-bleed_content > * {
-  opacity: var(--n58-p-copy1, 0);
-  transform: translateY(calc((1 - var(--n58-p-copy1, 0)) * 2.2rem));
-}
-[data-flwr] .n58-bleed-js .home-bleed_content > *:nth-child(2) {
-  opacity: var(--n58-p-copy2, 0);
-  transform: translateY(calc((1 - var(--n58-p-copy2, 0)) * 2.2rem));
-}
-[data-flwr] .n58-bleed-js .home-bleed_content > *:nth-child(3) {
-  opacity: var(--n58-p-copy3, 0);
-  transform: translateY(calc((1 - var(--n58-p-copy3, 0)) * 2.2rem));
-}
 /* button face follows the ANCESTOR theme mode (f-mode-light / f-mode-dark on the wrapper or any section) with :not() opt-outs; the mode class is set per section in markup and nests */
 [data-flwr].f-mode-light :is(.flwr_button_primary, .flwr_button_secondary, .flwr_button_ghost, .flwr_button_alert, .flwr_button_link):not(.is-outline):not(.alan-fab),
 [data-flwr] .f-mode-light :is(.flwr_button_primary, .flwr_button_secondary, .flwr_button_ghost, .flwr_button_alert, .flwr_button_link):not(.is-outline):not(.alan-fab) {
@@ -7111,7 +7022,7 @@ html.n58-zapier-open body {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   N’EMPRENDE · POSTULACIÓN — layout glue only (n-emprende-empresas.html #postulacion)
+   N^EMPRENDE · POSTULACIÓN — layout glue only (n-emprende-empresas.html #postulacion)
    Every look is an existing flwr class: flwr_stepper_*, flwr_field_*, flwr_chip,
    flwr_alert_*, flwr_button_*. This block only (1) resets <fieldset>/<legend>/<ol>
    browser chrome, (2) animates the step swap, (3) keyboard focus on the visually
@@ -7697,7 +7608,7 @@ html.n58-zapier-open body {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   N’EMPRENDE · Webflow form states
+   N^EMPRENDE · Webflow form states
    The form sits in a Webflow form wrapper (w-form) with its done and fail blocks. Webflow's own stylesheet gives
    w-form / w-form-done / w-form-fail a margin, a padding, a grey or pink fill and centred text; the project
    classes reset that so the flwr alert inside is the only visual. Webflow shows a block with an inline display,
