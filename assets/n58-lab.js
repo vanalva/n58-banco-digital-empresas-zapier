@@ -7,7 +7,11 @@
 (function () {
   var groups = Array.prototype.slice.call(document.querySelectorAll('[data-n58-lab]'));
   if (!groups.length) return;
-  var arrows = { prev: '../assets/images/icons/left-arrow-green.svg', next: '../assets/images/icons/right-arrow-green.svg' };
+  /* Icons resolve from this script's own URL: a '../assets/' literal breaks once the build
+     flattens pages/ to the site root (the deployed lab showed no arrows). */
+  var me = document.currentScript || document.querySelector('script[src*="n58-lab.js"]');
+  var icons = new URL('images/icons/', me ? me.src : location.href).href;
+  var arrows = { prev: icons + 'left-arrow-green.svg', next: icons + 'right-arrow-green.svg' };
 
   function key(g) { return g.getAttribute('data-n58-lab-key'); }
   function readPicks() {
