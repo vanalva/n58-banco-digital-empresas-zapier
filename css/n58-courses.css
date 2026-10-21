@@ -192,6 +192,21 @@
   max-width: 100%;
 }
 
+/* Phones: the site's standard hero (left-aligned copy, buttons side by side
+   from the left, photo below) instead of the centered desktop composition. */
+@media (max-width: 767px) {
+  [data-flwr] .tpl-hero.is-hero-centered.n58-ne-hero {
+    justify-items: start;
+  }
+  [data-flwr] .tpl-hero_text.is-hero-centered.n58-ne-hero_text {
+    --tpl-hero-align: left;
+    --tpl-hero-items: flex-start;
+  }
+  [data-flwr] .f-flex.n58-ne-hero_actions {
+    justify-content: flex-start;
+  }
+}
+
 /* Shared photo focus helpers. */
 .n58-ne-pos-top {
   object-position: 50% 12%;
@@ -579,7 +594,7 @@
 
 [data-flwr] .n58-ne-mujer-o15-img.is-2 { object-position: 50% 50%; }
 
-[data-flwr] .n58-ne-mujer-o15-img.is-3 { object-position: 50% 50%; }
+[data-flwr] .n58-ne-mujer-o15-img.is-3 { object-position: 66% 50%; }
 
 .n58-ne-mujer-o15-cap {
   display: flex;
