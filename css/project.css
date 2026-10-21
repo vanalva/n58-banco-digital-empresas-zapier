@@ -7689,3 +7689,37 @@ html.n58-zapier-open body {
 [data-flwr] .f-text-lead.tpl-blog_hero_excerpt {
   --_text-style---measure: var(--n58-hero-lead-measure);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   N^EMPRENDE MARK — the ^ in the program name drawn as N58's two-tone isotype
+   (assets/images/logos/isotipo-dual.svg, the chevron of imagotipo-dual.svg).
+   scripts/n58-nemprende-caret.py wraps the ^ of visible text in .n58-caret; the
+   glyph stays in the DOM (copy, search, screen readers) but is not painted.
+   Sized in em so it follows every text style; raised to sit over cap height
+   like the chevron over the 8 in the logo.
+   ───────────────────────────────────────────────────────────────────────── */
+/* The name never breaks across lines (the inline-block mark would otherwise
+   open a break point inside the word). */
+.n58-nemprende {
+  white-space: nowrap;
+}
+
+[data-flwr] .n58-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.26em;
+  margin-left: -0.01em;
+  margin-right: -0.02em;
+  vertical-align: 0.6em;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  white-space: nowrap;
+  text-indent: 200%;
+  line-height: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-image: url(../assets/images/logos/isotipo-dual.svg);
+  background-position: 50% 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
